@@ -1,2 +1,2 @@
-# PBMS
-Python Block-Model Simulator
+# BMSpy
+Block-Model Simulator for Python
