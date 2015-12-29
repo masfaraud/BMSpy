@@ -47,6 +47,27 @@ class Substraction(Block):
         
     def Label(self):
         return '-'
+        
+class Saturation(self):
+    def __init__(self,input_variable,output_variable,min_value,max_value):
+        """
+            output=value* input    
+        """
+        Block.__init__(self,[input_variable],[output_variable],1,0)
+        self.min_value=min_value
+        self.max_value=max_value
+
+    def Solve(self,it,ts):
+        value=self.InputValues(it)[0]
+        if value<self.min_value:
+            value=self.min_value
+        elif value>self.max_value:
+            value=self.max_value
+        self.outputs[0]._values[it]=value
+        
+    def Label(self):
+        return 'min<x<max'
+    
     
 class ODE(Block):
     def __init__(self,input_variable,output_variable,a,b):
@@ -98,3 +119,4 @@ class ODE(Block):
         
     def Label(self):
         return str(self.a)+'\n'+str(self.b)
+        

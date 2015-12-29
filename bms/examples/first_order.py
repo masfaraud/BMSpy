@@ -10,9 +10,9 @@ import bms
 K=1.
 tau=1.254
 
-#e=bmsp.Step(1.,'e')
-e=bms.Ramp(1.,'e')
-s=bms.Variable([0],'s')
+#e=bms.Step('e',1.)
+e=bms.Ramp('e',1.)
+s=bms.Variable('s',[0])
 
 block=bms.ODE(e,s,[K],[1,tau])
 ds=bms.DynamicSystem(10,100,[block])
