@@ -17,6 +17,9 @@ class Gain(Block):
 
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=self.value*self.InputValues(it)[0]
+        
+    def Label(self):
+        return str(self.value)
 
 
 class Sum(Block):
@@ -29,6 +32,9 @@ class Sum(Block):
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=np.dot(np.ones(2),self.InputValues(it))
 
+    def Label(self):
+        return '+'
+
 class Substraction(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         """
@@ -37,7 +43,10 @@ class Substraction(Block):
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
     def Solve(self,it,ts):
-        self.outputs[0]._values[it]=np.dot(np.array([1,-1]),self.InputValues(it))    
+        self.outputs[0]._values[it]=np.dot(np.array([1,-1]),self.InputValues(it))   
+        
+    def Label(self):
+        return '-'
     
 class ODE(Block):
     def __init__(self,input_variable,output_variable,a,b):
@@ -86,3 +95,6 @@ class ODE(Block):
         Mi,Mo=self.OutputMatrices(ts)
         # Solve at time t with time step ts
         self.outputs[0]._values[it]=np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T)
+        
+    def Label(self):
+        return str(self.a)+'\n'+str(self.b)

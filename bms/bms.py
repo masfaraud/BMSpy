@@ -274,6 +274,8 @@ class DynamicSystem:
             subplots_variables=[self.variables]
 #        plt.figure()
         fig,axs=plt.subplots(len(subplots_variables),sharex=True)
+        if len(subplots_variables)==1:
+            axs=[axs]
         for isub,subplot in enumerate(subplots_variables):
             legend=[]
             for variable in subplot:
@@ -283,19 +285,22 @@ class DynamicSystem:
             axs[isub].margins(0.08)
                             
         plt.xlabel('Time')
-        plt.show()
+        fig.show()
         
     def DrawModel(self):
-        names={}
+        f,ax=plt.subplots(1)
+        labels={}
         for variable in self.variables:
-            names[variable]=variable.name
-        print(names)
+            labels[variable]=variable.name
+        for block in self.blocks:
+            labels[block]=block.Label()
             
-        position=nx.spring_layout(self.graph)
+            
+        position=nx.spectral_layout(self.graph)
         # Drawing blocks
-        nx.draw_networkx_nodes(self.graph,position,nodelist=self.blocks,node_color='grey',node_shape='s',node_size=1200)
+        nx.draw_networkx_nodes(self.graph,position,ax=ax,nodelist=self.blocks,node_color='grey',node_shape='s',node_size=1200)
         # Drawing variable
-        nx.draw_networkx_nodes(self.graph,position,nodelist=self.variables,node_color='white',node_size=800)
-        nx.draw_networkx_labels(self.graph,position,names,font_size=16)
+        nx.draw_networkx_nodes(self.graph,position,ax=ax,nodelist=self.variables,node_color='white',node_size=800)
+        nx.draw_networkx_labels(self.graph,position,labels,ax=ax,font_size=16)
         nx.draw_networkx_edges(self.graph,position)
-                                    
+        plt.show()

@@ -16,4 +16,5 @@ setup(name='bms',
       license='Public Domain',
       packages=['bms'],
       install_requires=['numpy','matplotlib','networkx'],
+      classifiers=['Topic :: Scientific/Engineering','Development Status :: 3 - Alpha','License :: Public Domain'],
       zip_safe=False)
