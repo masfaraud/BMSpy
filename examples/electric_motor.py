@@ -10,22 +10,32 @@ sys.path.append('../')
 import bms
 
 R=1.
-L=0.001
+L=0.03
 J=10
-k=100
+k=1
+Tr=0.1# Torque requested on motor output
 
 #e=bmsp.Step(1.,'e')
 Ui=bms.Step(1.,'Input Voltage')
-e=bms.Variable([0],'e')
-U1=bms.Variable([0],'U1')
-i=bms.Variable([0],'i')
+e=bms.Variable('Counter electromotive force')
+Uind=bms.Variable('Voltage Inductor')
+Iind=bms.Variable('Intensity Inductor')
+Tm=bms.Variable('Motor torque')
+Text=bms.Step(-Tr,'Outside Torque')
+T=bms.Variable('Torque')
+W=bms.Variable('Rotational speed')
 
-s=bms.Variable([0],'s')
+s=bms.Variable('s')
 
-block1=bms.SumBlock(Ui,e,U1)
-block2=bms.ODEBlock(U1,i,[1],[R,L])
-block3=bms.ODEBlock(i,e,[k],[1])
-ds=bms.DynamicSystem(10,100,[block1,block2,block3])
+block1=bms.SubstractBlock(Ui,e,Uind)
+block2=bms.ODEBlock(Uind,Iind,[1],[R,L])
+block3=bms.GainBlock(Iind,Tm,k)
+block4=bms.SumBlock(Tm,Text,T)
+block5=bms.ODEBlock(T,W,[1],[0,J])
+block6=bms.GainBlock(W,e,1/k)
+ds=bms.DynamicSystem(100,1000,[block1,block2,block3,block4,block5,block6])
 #res=ds.ResolutionOrder()
 #print(res)
 ds.Simulate()
+#ds.PlotVariables()
+ds.PlotVariables([[Ui,W],[Tm,Text]])

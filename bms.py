@@ -11,11 +11,10 @@ import math
 import networkx as nx
 
 class Variable:
-    def __init__(self,name='',initial_value=0,derivatives=[]):
+    def __init__(self,name='',initial_values=[0]):
         self.name=name
-        self.initial_value=initial_value
+        self.initial_values=initial_values
         self._values=np.array([])
-        self.derivatives=derivatives
         self.max_order=0
     
     def InitValues(self,ns,ts,max_order):
@@ -89,6 +88,7 @@ class Block:
         if isinstance(variable,Variable):
             self.inputs.append(variable)
         else:
+            print('Error: ',variable.name,variable,' given is not a variable')
             raise TypeError
 
     def AddOutput(self,variable):
@@ -111,17 +111,37 @@ class Block:
             O[iv,:]=variable._values[it-self.max_output_order:it]
         return O
 
+class GainBlock(Block):
+    def __init__(self,input_variable,output_variable,value):
+        """
+            output=value* input    
+        """
+        Block.__init__(self,[input_variable],[output_variable],1,0)
+        self.value=value
+
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=self.value*self.InputValues(it)[0]
+
+
 class SumBlock(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         """
             output=input1+input2    
         """
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
-#        self.AddInput(input_variable)
-#        self.AddOutput(output_variable)
 
-    def Solve(it,ts):
-        self.outputs[0]._values[it]=np.dot(np.ones(2),self.InputValues(it).T)
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=np.dot(np.ones(2),self.InputValues(it))
+
+class SubstractBlock(Block):
+    def __init__(self,input_variable1,input_variable2,output_variable):
+        """
+            output=input1-input2    
+        """
+        Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
+
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=np.dot(np.array([1,-1]),self.InputValues(it))    
     
 class ODEBlock(Block):
     def __init__(self,input_variable,output_variable,a,b):
@@ -234,8 +254,6 @@ class DynamicSystem:
         
     graph=property(_get_Graph)
     
-    def DrawGraph(self):
-        nx.draw(self.graph)
         
     def ResolutionOrder(self):
         known_variables=self.inputs[:]
@@ -250,21 +268,27 @@ class DynamicSystem:
             # Check if a block out of remaining is solvable
             # ie if all inputs are known of half known
             for block in unsolved_blocks:
+                solved_input_variables=[]
+                half_solved_input_variables=[]
                 unsolved_input_variables=[]
-#                solvable=1
                 for variable in block.inputs:
-                    if not variable in known_variables+half_known_variables:
+                    if variable in known_variables:
+                        solved_input_variables.append(variable)
+                    elif variable in half_known_variables:
+                        half_solved_input_variables.append(variable)
+                    else:
                         unsolved_input_variables.append(variable)
                         
                 
                 if unsolved_input_variables==[]:
-                    resolution_order.append(block)
-                    unsolved_blocks.remove(block)
-                    block_solved=True
-                    for variable in block.outputs:
-                        if not variable in known_variables:
-                            known_variables.append(variable)
-                    break
+                    if solved_input_variables!=[]:
+                        resolution_order.append(block)
+                        unsolved_blocks.remove(block)
+                        block_solved=True
+                        for variable in block.outputs:
+                            if not variable in known_variables:
+                                known_variables.append(variable)
+                        break
             if not block_solved:
                 # A block with inputs partially can half solve its outputs
                 
@@ -293,10 +317,8 @@ class DynamicSystem:
                         max_score_block=half_solved_blocks[block]                                        
                     except:
                         max_score_block=0
-                    print(half_solved_blocks)
                     if score>max_score_block:
                         scores[block]=score
-                print(score)
                 if scores!={}:
                     max_score=0
                     for block,score in scores.items():
@@ -304,21 +326,17 @@ class DynamicSystem:
                             max_score=score
                             max_block=block
                             
-#                            max_loop=score_loop[1]
-                    # Add loop in solvable blocks
-                            
-                    # Add
+                    # Half solve block
+                    resolution_order.append(max_block)
+                    half_solved_blocks[max_block]=max_score
+                    for variable in max_block.outputs:
+                        if not variable in known_variables+half_known_variables:
+                            half_known_variables.append(variable)
+
                 else:
                     raise NotImplemented
                     
-                # Half solve block
-                resolution_order.append(max_block)
-                half_solved_blocks[max_block]=max_score
-                print(max_block)
-                for variable in max_block.inputs:
-                    if not variable in known_variables+half_known_variables:
-                        half_known_variables.append(variable)
-                            
+                             
         return resolution_order 
         
                             
@@ -330,24 +348,40 @@ class DynamicSystem:
             variable.InitValues(self.ns,self.ts,self.max_order)
 #            else:
 #                variable.Values(self.ns,self.ts,self.max_order)
-        for it,t in enumerate(self.t):           
+        for it,t in enumerate(self.t[1:]):           
 #            print('iteration step/time: ',it,t,'/',self.t.shape)
             for block in resolution_order:
 #                print('write @ ',it+self.max_order)
-                block.Solve(it+self.max_order,self.ts)
+                block.Solve(it+self.max_order+1,self.ts)
 #                print(block)
                 
-    def PlotVariables(self,variables=None):
-        if variables==None:
-            variables=self.variables
-        plt.figure()
-        legend=[]
-        for variable in variables:
-            plt.plot(self.t,variable.values)
-            legend.append(variable.name)
-        plt.margins(self.te*0.03)
+    def PlotVariables(self,subplots_variables=None):
+        if subplots_variables==None:
+            subplots_variables=[self.variables]
+#        plt.figure()
+        fig,axs=plt.subplots(len(subplots_variables),sharex=True)
+        for isub,subplot in enumerate(subplots_variables):
+            legend=[]
+            for variable in subplot:
+                axs[isub].plot(self.t,variable.values)
+                legend.append(variable.name)
+            axs[isub].legend(legend,loc='best')
+            axs[isub].margins(0.08)
+                            
         plt.xlabel('Time')
-        plt.legend(legend)
         plt.show()
+        
+    def DrawModel(self):
+        names={}
+        for variable in self.variables:
+            names[variable]=variable.name
+        print(names)
             
+        position=nx.spring_layout(self.graph)
+        # Drawing blocks
+        nx.draw_networkx_nodes(self.graph,position,nodelist=self.blocks,node_color='grey',node_shape='s',node_size=1200)
+        # Drawing variable
+        nx.draw_networkx_nodes(self.graph,position,nodelist=self.variables,node_color='white',node_size=800)
+        nx.draw_networkx_labels(self.graph,position,names,font_size=16)
+        nx.draw_networkx_edges(self.graph,position)
                                     
