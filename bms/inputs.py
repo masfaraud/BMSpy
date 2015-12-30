@@ -33,3 +33,8 @@ class Sinus(Input):
         Input.__init__(self,name)
         self.function=lambda t:amplitude*sin(w*t+phase)+initial_value
     
+class InputFunction(Input):
+    def __init__(self,name='Input Function',function=function):
+        Input.__init__(self,name)
+        self.function=function
+    

@@ -34,7 +34,7 @@ class Sum(Block):
 
     def Label(self):
         return '+'
-
+        
 class Substraction(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         """
@@ -48,10 +48,43 @@ class Substraction(Block):
     def Label(self):
         return '-'
         
+class Product(Block):
+    def __init__(self,input_variable1,input_variable2,output_variable):
+        """
+            output=input1*input2    
+        """
+        Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
+
+    def Solve(self,it,ts):
+        value1,value2=self.InputValues(it)
+        self.outputs[0]._values[it]=value1*value2
+
+    def Label(self):
+        return 'x'
+
+class Division(Block):
+    def __init__(self,input_variable1,input_variable2,output_variable):
+        """
+            output=input1/input2    
+        """
+        Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
+
+    def Solve(self,it,ts):
+        value1,value2=self.InputValues(it)
+        self.outputs[0]._values[it]=value1/value2
+
+    def Label(self):
+        return '/'
+
+
+        
 class Saturation(self):
     def __init__(self,input_variable,output_variable,min_value,max_value):
         """
-            output=value* input    
+            output=min_value if input < min_value
+            output=max_value if input > max_value
+            output=input if  min_value < input < max_value
+            
         """
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.min_value=min_value
@@ -67,6 +100,33 @@ class Saturation(self):
         
     def Label(self):
         return 'min<x<max'
+
+class Coulomb(self):
+    def __init__(self,input_variable,speed_variable,output_variable,max_value,tolerance=0):
+        """
+            Return coulomb force under condition of speed and sum of forces (input)
+            
+        """
+        Block.__init__(self,[input_variable,speed_variable],[output_variable],1,0)
+        self.max_value=max_value
+        self.tolerance=tolerance
+
+    def Solve(self,it,ts):
+        input_value,speed=self.InputValues(it)
+        if speed>self.tolerance:
+            output=-self.max_value
+        elif speed<-self.tolerance:
+            output=self.max_value
+        else:
+            if abs(input_value)<self.max_value:
+                output=input_value
+            else:
+                output=self.max_value
+
+        self.outputs[0]._values[it]=output
+        
+    def Label(self):
+        return 'Clb'
     
     
 class ODE(Block):
@@ -120,3 +180,16 @@ class ODE(Block):
     def Label(self):
         return str(self.a)+'\n'+str(self.b)
         
+class FunctionBlock(Block):
+    def __init__(self,input_variable,output_variable,function):
+        """
+            output=f(input)    
+        """
+        Block.__init__(self,[input_variable],[output_variable],1,0)
+        self.function=function
+
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=self.function(self.InputValues(it)[0])
+
+    def Label(self):
+        return 'f(t)'
