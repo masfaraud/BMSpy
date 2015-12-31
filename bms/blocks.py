@@ -78,7 +78,7 @@ class Division(Block):
 
 
         
-class Saturation(self):
+class Saturation(Block):
     def __init__(self,input_variable,output_variable,min_value,max_value):
         """
             output=min_value if input < min_value
@@ -101,7 +101,7 @@ class Saturation(self):
     def Label(self):
         return 'min<x<max'
 
-class Coulomb(self):
+class Coulomb(Block):
     def __init__(self,input_variable,speed_variable,output_variable,max_value,tolerance=0):
         """
             Return coulomb force under condition of speed and sum of forces (input)
@@ -122,7 +122,6 @@ class Coulomb(self):
                 output=input_value
             else:
                 output=self.max_value
-
         self.outputs[0]._values[it]=output
         
     def Label(self):
@@ -193,3 +192,4 @@ class FunctionBlock(Block):
 
     def Label(self):
         return 'f(t)'
+        

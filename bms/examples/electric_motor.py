@@ -7,34 +7,57 @@ Created on Sat Dec 26 22:11:00 2015
 
 import bms
 
-R=1.
-L=0.03
-J=5
-k=1
-Tr=0.1# Torque requested on motor output
+R=.5
+L=0.5
+J=0.1
+k=0.17
+Tr=3# Torque requested on motor output
+Gc=8# Gain corrector
+tau_i=7
+Umax=48# Max voltage motor
+Imax=10# Max intensity motor
+
 
 #e=bmsp.Step(1.,'e')
-Ui=bms.Step('Input Voltage',1.)
+
+Wc=bms.Step('Rotationnal speed command',100.)
+
+dW=bms.Variable('delta rotationnal speed')
+Up=bms.Variable('Voltage corrector proportionnal')#
+Ui=bms.Variable('Voltage corrector integrator')#
+Uc=bms.Variable('Voltage command')
+Um=bms.Variable('Voltage Input motor')
 e=bms.Variable('Counter electromotive force')
 Uind=bms.Variable('Voltage Inductor')
 Iind=bms.Variable('Intensity Inductor')
 Tm=bms.Variable('Motor torque')
-Text=bms.Step('Outside torque',-Tr)
+Text=bms.Step('Resistant torque')
 T=bms.Variable('Torque')
 W=bms.Variable('Rotational speed')
+Pe=bms.Variable('Electrical power')
+Pm=bms.Variable('Mechanical power')
 
 s=bms.Variable('s')
 
-block1=bms.Substraction(Ui,e,Uind)
-block2=bms.ODE(Uind,Iind,[1],[R,L])
-block3=bms.Gain(Iind,Tm,k)
-block4=bms.Sum(Tm,Text,T)
-block5=bms.ODE(T,W,[1],[0,J])
-block6=bms.Gain(W,e,1/k)
-ds=bms.DynamicSystem(100,1000,[block1,block2,block3,block4,block5,block6])
-#res=ds.ResolutionOrder()
-#print(res)
+block1=bms.Substraction(Wc,W,dW)
+block2=bms.ODE(dW,Ui,[1],[0,tau_i])
+block3=bms.Gain(dW,Up,Gc)
+block4=bms.Sum(Up,Ui,Uc)
+block4a=bms.Saturation(Uc,Um,-Umax,Umax)
+block5=bms.Substraction(Um,e,Uind)
+block6=bms.ODE(Uind,Iind,[1],[R,L])
+block7=bms.Gain(Iind,Tm,k)
+block8=bms.Sum(Tm,Text,T)
+block8a=bms.Coulomb(Tm,W,Text,Tr)
+block9=bms.ODE(T,W,[1],[0,J])
+block10=bms.Gain(W,e,k)
+block11=bms.Product(Um,Iind,Pe)
+block11a=bms.Product(Tm,W,Pm)
+ds=bms.DynamicSystem(20,1000,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
+
+
 ds.DrawModel()
 ds.Simulate()
-#ds.PlotVariables()
-ds.PlotVariables([[Ui,W],[Tm,Text,T]])
+ds.PlotVariables([[Wc,W,dW],[Tm,Text,T],])
+ds.PlotVariables([[Um,e,Uind],[Pe,Pm],[Iind]])
+
