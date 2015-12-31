@@ -12,7 +12,7 @@ def readme():
         return f.read()
 
 setup(name='bms',
-      version='0.02',
+      version='0.03',
       description='Block-Model Simulator for python',
       long_description=readme(),
       keywords='block model simulation simulator time',

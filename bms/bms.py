@@ -119,7 +119,7 @@ class DynamicSystem:
         self.te=te
         self.ns=ns
         self.ts=self.te/(self.ns)# time step
-        self.t=np.arange(0,self.te+self.ts,self.ts)# Time vector
+        self.t=np.linspace(0,self.te,num=ns+1)# Time vector
         self.blocks=[]
         self.variables=[]
         self.inputs=[]
@@ -266,7 +266,7 @@ class DynamicSystem:
 #            else:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           
-#            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
+            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
             for block in resolution_order:
 #                print('write @ ',it+self.max_order)
                 block.Solve(it+self.max_order+1,self.ts)
