@@ -76,6 +76,36 @@ class Division(Block):
     def Label(self):
         return '/'
 
+class DeadZone(Block):
+    """
+    Let the output be the output if the trigger variable is above a trigger value
+    
+    """
+    def __init__(self,input_variable,output_variable,zone_width):
+        Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)
+        self.zone_width=zone_width
+
+    def Solve(self,it,ts):
+        input_value=self.InputValues(it)[0]
+        if value<-0.5*self.zone_width:
+            output=value+0.5*self.zone_width
+        elif value>-0.5*self.zone_width:
+            output=value-0.5*self.zone_width
+        else:
+            output=0
+        self.outputs[0]._values[it]=output
+    
+#class Delay(Block):
+#    def __init__(self,input_variable,output_variable,delay):
+#        Block.__init__(self,[input_variable],[output_variable],1,0)
+#        self.delay=delay
+#
+#    def Solve(self,it,ts):
+#        value1,value2=self.InputValues(it)
+#        self.outputs[0]._values[it]=value1/value2
+#
+#    def Label(self):
+#        return 'dly'
 
         
 class Saturation(Block):
