@@ -19,7 +19,7 @@ class Variable:
     
     def InitValues(self,ns,ts,max_order):
         self.max_order=max_order
-        self._values=np.zeros(ns+max_order)
+        self._values=np.zeros(ns+max_order+1)
         self.ForwardValues()
             
     def ForwardValues(self):
@@ -40,8 +40,8 @@ class Input(Variable):
         
     def InitValues(self,ns,ts,max_order):
         self.max_order=max_order
-        self._values=np.zeros(ns+max_order)
-        for i in range(ns):
+        self._values=np.zeros(ns+max_order+1)
+        for i in range(ns+1):
             self._values[i+max_order]=self.function(i*ts)
         self.ForwardValues()
             
@@ -90,9 +90,12 @@ class Block:
             raise TypeError
 
     def InputValues(self,it):
+#        print(self,it)
         # Provides values in inputs values for computing at iteration it
         I=np.zeros((self.n_inputs,self.max_input_order))
         for iv,variable in enumerate(self.inputs):
+#            print(it-self.max_input_order+1,it+1)            
+#            print(variable._values[it-self.max_input_order+1:it+1])
             I[iv,:]=variable._values[it-self.max_input_order+1:it+1]
         return I
             
@@ -115,7 +118,7 @@ class DynamicSystem:
         """
         self.te=te
         self.ns=ns
-        self.ts=self.te/(self.ns-1)# time stem 
+        self.ts=self.te/(self.ns)# time step
         self.t=np.arange(0,self.te+self.ts,self.ts)# Time vector
         self.blocks=[]
         self.variables=[]
@@ -263,7 +266,7 @@ class DynamicSystem:
 #            else:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           
-#            print('iteration step/time: ',it,t,'/',self.t.shape)
+#            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
             for block in resolution_order:
 #                print('write @ ',it+self.max_order)
                 block.Solve(it+self.max_order+1,self.ts)

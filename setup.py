@@ -12,11 +12,11 @@ def readme():
         return f.read()
 
 setup(name='bms',
-      version='0.01',
+      version='0.02',
       description='Block-Model Simulator for python',
       long_description=readme(),
       keywords='block model simulation simulator time',
-      url='http://github.com/masfaraud/BMSpy',
+      url='http://github.com/masfaraud/BMSpy/wiki/',
       author='Steven Masfaraud',
       author_email='steven@masfaraud.fr',
       license='Creative Commons Attribution-Share Alike license',

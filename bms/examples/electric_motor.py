@@ -8,14 +8,14 @@ Created on Sat Dec 26 22:11:00 2015
 import bms
 
 R=.5
-L=0.5
+L=0.2
 J=0.1
 k=0.17
 Tr=3# Torque requested on motor output
 Gc=8# Gain corrector
 tau_i=7
 Umax=48# Max voltage motor
-Imax=10# Max intensity motor
+#Imax=10# Max intensity motor
 
 
 #e=bmsp.Step(1.,'e')
@@ -53,7 +53,7 @@ block9=bms.ODE(T,W,[1],[0,J])
 block10=bms.Gain(W,e,k)
 block11=bms.Product(Um,Iind,Pe)
 block11a=bms.Product(Tm,W,Pm)
-ds=bms.DynamicSystem(20,1000,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
+ds=bms.DynamicSystem(20,200,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
 
 
 ds.DrawModel()
