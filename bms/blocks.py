@@ -78,8 +78,7 @@ class Division(Block):
 
 class DeadZone(Block):
     """
-    Let the output be the output if the trigger variable is above a trigger value
-    
+            
     """
     def __init__(self,input_variable,output_variable,zone_width):
         Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)
@@ -94,6 +93,27 @@ class DeadZone(Block):
         else:
             output=0
         self.outputs[0]._values[it]=output
+
+
+class Hysteresis(Block):
+    """
+
+    """
+    def __init__(self,input_variable,output_variable,zone_width,initial_value):
+        Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)
+        self.zone_width=zone_width
+        self.value=initial_value
+
+    def Solve(self,it,ts):
+        input_value=self.InputValues(it)[0]
+        if self.value>input_value+0.5*self.zone_width:
+            output=input_value+0.5*self.zone_width
+            self.value=output
+        elif self.value<input_value-0.5*self.zone_width:
+            output=input_value-0.5*self.zone_width
+            self.value=output
+        self.outputs[0]._values[it]=output
+
     
 #class Delay(Block):
 #    def __init__(self,input_variable,output_variable,delay):
