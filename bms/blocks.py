@@ -35,7 +35,7 @@ class Sum(Block):
     def Label(self):
         return '+'
         
-class Substraction(Block):
+class Subtraction(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         """
             output=input1-input2    
@@ -172,6 +172,7 @@ class Coulomb(Block):
                 output=input_value
             else:
                 output=self.max_value
+#        print(input_value,speed,output)
         self.outputs[0]._values[it]=output
         
     def Label(self):

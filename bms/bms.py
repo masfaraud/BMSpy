@@ -106,7 +106,12 @@ class Block:
             O[iv,:]=variable._values[it-self.max_output_order:it]
         return O
 
-
+class ModelError(Exception):
+    def __init__(self):
+        pass
+    
+    def __str__(self):
+        return 'Model Error'
             
         
 class DynamicSystem:
@@ -256,8 +261,24 @@ class DynamicSystem:
                              
         return resolution_order 
         
+        
+        
+    def CheckModelConsistency(self):
+        """
+            Check for model consistency:
+             - an input variable can't be set as the output of a block
+             - a variable can't be the output of more than one block
+             
+        """
+        for variable in self.inputs:
+            if self.graph.predecessors(variable)!=[]:
+                raise ModelError
+        for variable in self.variables:
+            if len(self.graph.predecessors(variable))>1:
+                raise ModelError
                             
     def Simulate(self):
+        self.CheckModelConsistency()
         resolution_order=self.ResolutionOrder()
         # Initialisation of variables values
         for variable in self.variables+self.inputs:
@@ -266,7 +287,7 @@ class DynamicSystem:
 #            else:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           
-            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
+#            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
             for block in resolution_order:
 #                print('write @ ',it+self.max_order)
                 block.Solve(it+self.max_order+1,self.ts)
@@ -286,6 +307,7 @@ class DynamicSystem:
                 legend.append(variable.name)
             axs[isub].legend(legend,loc='best')
             axs[isub].margins(0.08)
+            axs[isub].grid()
                             
         plt.xlabel('Time')
         fig.show()
