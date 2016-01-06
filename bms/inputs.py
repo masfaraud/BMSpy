@@ -151,9 +151,13 @@ class WLTP1(Input):
                    0.0, 0.0, 0.0, ]
 
         def function(t):
-            ti=int(t)
-            # Linear interpolation between two points
-            return self.data[ti]*(1+ti-t)+self.data[ti+1]*(t-ti)
+            te=len(self.data)-1# End time of data
+            if t<te:
+                ti=int(t)
+                # Linear interpolation between two points
+                return self.data[ti]*(1+ti-t)+self.data[ti+1]*(t-ti)
+            else:
+                return 0.
         self.function=function         
 
 class WLTP2(Input):
@@ -346,9 +350,13 @@ class WLTP2(Input):
                    0.0, ]
                    
         def function(t):
-            ti=int(t)
-            # Linear interpolation between two points
-            return self.data[ti]*(1+ti-t)+self.data[ti+1]*(t-ti)
+            te=len(self.data)-1# End time of data
+            if t<te:
+                ti=int(t)
+                # Linear interpolation between two points
+                return self.data[ti]*(1+ti-t)+self.data[ti+1]*(t-ti)
+            else:
+                return 0.
         self.function=function         
 
 class WLTP3(Input):
@@ -541,8 +549,12 @@ class WLTP3(Input):
                    0.0, ]
                    
         def function(t):
-            ti=int(t)
-            # Linear interpolation between two points
-            return self.data[ti]*(1+ti-t)+self.data[ti+1]*(t-ti)
+            te=len(self.data)-1# End time of data
+            if t<te:
+                ti=int(t)
+                # Linear interpolation between two points
+                return self.data[ti]*(1+ti-t)+self.data[ti+1]*(t-ti)
+            else:
+                return 0.
         self.function=function         
                    
