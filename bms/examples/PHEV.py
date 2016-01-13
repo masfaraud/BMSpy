@@ -6,10 +6,12 @@ Created on Thu Dec 31 18:22:42 2015
 """
 
 import bms
+from bms.inputs.wltp import WLTP3
+from bms.blocks.continuous import Gain
 
-Vc=bms.WLTP3('WLTP Cycle')
+Vc=WLTP3('WLTP Cycle')
 V=bms.Variable('Speed')
-block=bms.Gain(Vc,V,1)
+block=Gain(Vc,V,1)
 ds=bms.DynamicSystem(450,5000,[block])
 ds.Simulate()
-ds.PlotVariables()
+ds.PlotVariables([[Vc]])

@@ -6,6 +6,9 @@ Created on Sat Dec 26 22:11:00 2015
 """
 
 import bms
+from bms.inputs.functions import Step
+from bms.blocks.continuous import Gain,ODE,Sum,Subtraction,Product
+from bms.blocks.nonlinear import Coulomb,Saturation
 
 R=0.3
 L=0.2
@@ -20,7 +23,7 @@ Umax=48# Max voltage motor
 
 #e=bmsp.Step(1.,'e')
 
-Wc=bms.Step('Rotationnal speed command',100.)
+Wc=Step('Rotationnal speed command',100.)
 
 dW=bms.Variable('delta rotationnal speed')
 Up=bms.Variable('Voltage corrector proportionnal')#
@@ -39,20 +42,20 @@ Pm=bms.Variable('Mechanical power')
 
 s=bms.Variable('s')
 
-block1=bms.Subtraction(Wc,W,dW)
-block2=bms.ODE(dW,Ui,[1],[0,tau_i])
-block3=bms.Gain(dW,Up,Gc)
-block4=bms.Sum(Up,Ui,Uc)
-block4a=bms.Saturation(Uc,Um,-Umax,Umax)
-block5=bms.Subtraction(Um,e,Uind)
-block6=bms.ODE(Uind,Iind,[1],[R,L])
-block7=bms.Gain(Iind,Tm,k)
-block8=bms.Sum(Tm,Text,T)
-block8a=bms.Coulomb(Tm,W,Text,Tr,2)
-block9=bms.ODE(T,W,[1],[0,J])
-block10=bms.Gain(W,e,k)
-block11=bms.Product(Um,Iind,Pe)
-block11a=bms.Product(Tm,W,Pm)
+block1=Subtraction(Wc,W,dW)
+block2=ODE(dW,Ui,[1],[0,tau_i])
+block3=Gain(dW,Up,Gc)
+block4=Sum(Up,Ui,Uc)
+block4a=Saturation(Uc,Um,-Umax,Umax)
+block5=Subtraction(Um,e,Uind)
+block6=ODE(Uind,Iind,[1],[R,L])
+block7=Gain(Iind,Tm,k)
+block8=Sum(Tm,Text,T)
+block8a=Coulomb(Tm,W,Text,Tr,2)
+block9=ODE(T,W,[1],[0,J])
+block10=Gain(W,e,k)
+block11=Product(Um,Iind,Pe)
+block11a=Product(Tm,W,Pm)
 ds=bms.DynamicSystem(10,2000,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
 
 

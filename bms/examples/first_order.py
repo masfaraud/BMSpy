@@ -6,15 +6,17 @@ Created on Tue Dec 22 18:34:19 2015
 """
 
 import bms
+from bms.inputs.functions import Ramp
+from bms.blocks.continuous import ODE
 
 K=1.
 tau=1.254
 
 #e=bms.Step('e',1.)
-e=bms.Ramp('e',1.)
+e=Ramp('e',1.)
 s=bms.Variable('s',[0])
 
-block=bms.ODE(e,s,[K],[1,tau])
+block=ODE(e,s,[K],[1,tau])
 ds=bms.DynamicSystem(10,100,[block])
 #res=ds.ResolutionOrder()
 #print(res)
