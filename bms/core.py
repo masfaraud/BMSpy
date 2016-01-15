@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 import networkx as nx
+import dill
 
 class Variable:
     def __init__(self,name='',initial_values=[0]):
@@ -48,12 +49,6 @@ class Input(Variable):
     def ForwardValues(self):
         pass
 
-
-
-                
-#class Output(Variable):
-#    def __init__(self):
-#        Variable.__init__(self)
     
 
 class Block:
@@ -321,7 +316,7 @@ class DynamicSystem:
             labels[block]=block.Label()
             
             
-        position=nx.spectral_layout(self.graph)
+        position=nx.spring_layout(self.graph)
         # Drawing blocks
         nx.draw_networkx_nodes(self.graph,position,ax=ax,nodelist=self.blocks,node_color='grey',node_shape='s',node_size=1200)
         # Drawing variable
@@ -329,3 +324,30 @@ class DynamicSystem:
         nx.draw_networkx_labels(self.graph,position,labels,ax=ax,font_size=16)
         nx.draw_networkx_edges(self.graph,position)
         plt.show()
+
+#    def DrawModel2(self):
+#        # Compute position of blocks
+#        # Initialising position of first input at (0,0)
+#        pos={}
+#        pos[self.inputs[0]]=(0,0)
+
+    def Save(self,name_file):
+        """
+            name_file: name of the file without extension.
+            The extension .bms is added by function
+        """
+        with open(name_file+'.bms','wb') as file:
+            model=dill.dump(self,file)
+        
+
+    def __getstate__(self):
+        dic = self.__dict__.copy()        
+        return dic
+        
+    def __setstate__(self,dic):
+        self.__dict__ = dic        
+        
+def Load(file):
+    with open(file,'rb') as file:
+        model=dill.load(file)
+        return model
