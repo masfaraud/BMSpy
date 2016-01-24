@@ -12,8 +12,17 @@ import networkx as nx
 import dill
 
 class Variable:
-    def __init__(self,name='',initial_values=[0]):
-        self.name=name
+    def __init__(self,names='',initial_values=[0]):
+        if type(names)==str:
+            self.name=names
+            self.short_name=names 
+        else:
+            try:
+                self.short_name=names[1]
+                self.name=names[0]
+            except:
+                raise TypeError
+                
         self.initial_values=initial_values
         self._values=np.array([])
         self.max_order=0
@@ -32,9 +41,18 @@ class Variable:
     values=property(_get_values)
     
         
-class Input(Variable):
-    def __init__(self,name):
-        self.name=name
+class Signal(Variable):
+    def __init__(self,names):
+        if type(names)==str:
+            self.name=names
+            self.short_name=names 
+        else:
+            try:
+                self.short_name=names[1]
+                self.name=names[0]
+            except:
+                raise TypeError
+            
         self._values=np.array([])
         self.max_order=0
         
@@ -122,7 +140,7 @@ class DynamicSystem:
         self.t=np.linspace(0,self.te,num=ns+1)# Time vector
         self.blocks=[]
         self.variables=[]
-        self.inputs=[]
+        self.signals=[]
 
         self.max_order=0        
         
@@ -143,11 +161,12 @@ class DynamicSystem:
         self._utd_graph=False
         
     def AddVariable(self,variable):
-        if isinstance(variable,Variable):
+        if isinstance(variable,Signal):
+            if not variable in self.variables:
+                self.signals.append(variable)
+        elif isinstance(variable,Variable):
             if not variable in self.variables:
                 self.variables.append(variable)
-                if isinstance(variable,Input):
-                    self.inputs.append(variable)
         else:
             raise TypeError
         self._utd_graph=False
@@ -173,14 +192,14 @@ class DynamicSystem:
     
         
     def ResolutionOrder(self):
-        known_variables=self.inputs[:]
+        known_variables=self.signals[:]
         resolution_order=[]
         half_known_variables=[]
         half_solved_blocks={}
         unsolved_blocks=self.blocks[:]
         graph_loops=list(nx.simple_cycles(self.graph))
 #        print(graph_loops)
-        while len(known_variables)<len(self.variables):
+        while len(known_variables)<(len(self.variables)+len(self.signals)):
             block_solved=False
             # Check if a block out of remaining is solvable
             # ie if all inputs are known of half known
@@ -265,7 +284,7 @@ class DynamicSystem:
              - a variable can't be the output of more than one block
              
         """
-        for variable in self.inputs:
+        for variable in self.signals:
             if self.graph.predecessors(variable)!=[]:
                 raise ModelError
         for variable in self.variables:
@@ -276,7 +295,7 @@ class DynamicSystem:
         self.CheckModelConsistency()
         resolution_order=self.ResolutionOrder()
         # Initialisation of variables values
-        for variable in self.variables+self.inputs:
+        for variable in self.variables+self.signals:
 #            if not isinstance(variable,Input):
             variable.InitValues(self.ns,self.ts,self.max_order)
 #            else:
@@ -307,29 +326,10 @@ class DynamicSystem:
         plt.xlabel('Time')
         fig.show()
         
-    def DrawModel(self):
-        f,ax=plt.subplots(1)
-        labels={}
-        for variable in self.variables:
-            labels[variable]=variable.name
-        for block in self.blocks:
-            labels[block]=block.Label()
-            
-            
-        position=nx.spring_layout(self.graph)
-        # Drawing blocks
-        nx.draw_networkx_nodes(self.graph,position,ax=ax,nodelist=self.blocks,node_color='grey',node_shape='s',node_size=1200)
-        # Drawing variable
-        nx.draw_networkx_nodes(self.graph,position,ax=ax,nodelist=self.variables,node_color='white',node_size=800)
-        nx.draw_networkx_labels(self.graph,position,labels,ax=ax,font_size=16)
-        nx.draw_networkx_edges(self.graph,position)
-        plt.show()
 
-#    def DrawModel2(self):
-#        # Compute position of blocks
-#        # Initialising position of first input at (0,0)
-#        pos={}
-#        pos[self.inputs[0]]=(0,0)
+    def DrawModel(self):
+        from .interface import ModelDrawer
+        ModelDrawer(self)
 
     def Save(self,name_file):
         """

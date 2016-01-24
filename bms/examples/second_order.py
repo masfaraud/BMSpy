@@ -6,7 +6,7 @@ Created on Tue Dec 22 18:42:33 2015
 """
 
 import bms
-from bms.inputs.functions import Sinus
+from bms.signals.functions import Sinus
 from bms.blocks.continuous import ODE
 
 K=1

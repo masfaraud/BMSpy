@@ -21,8 +21,11 @@ class Gain(Block):
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=self.value*self.InputValues(it)[0]
         
-    def Label(self):
+    def LabelBlock(self):
         return str(self.value)
+
+    def LabelConnections(self):
+        return ['','']
 
 
 class Sum(Block):
@@ -35,9 +38,12 @@ class Sum(Block):
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=np.dot(np.ones(2),self.InputValues(it))
 
-    def Label(self):
-        return '+'
-        
+    def LabelBlock(self):
+        return ''
+
+    def LabelConnections(self):
+        return ['+','+']
+
 class Subtraction(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         """
@@ -48,8 +54,12 @@ class Subtraction(Block):
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=np.dot(np.array([1,-1]),self.InputValues(it))   
         
-    def Label(self):
-        return '-'
+    def LabelBlock(self):
+        return ''
+
+    def LabelConnections(self):
+        return ['+','-']
+
         
 class Product(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
@@ -62,8 +72,11 @@ class Product(Block):
         value1,value2=self.InputValues(it)
         self.outputs[0]._values[it]=value1*value2
 
-    def Label(self):
+    def LabelBlock(self):
         return 'x'
+
+    def LabelConnections(self):
+        return ['','']
 
 class Division(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
@@ -76,8 +89,11 @@ class Division(Block):
         value1,value2=self.InputValues(it)
         self.outputs[0]._values[it]=value1/value2
 
-    def Label(self):
+    def LabelBlock(self):
         return '/'
+
+    def LabelConnections(self):
+        return ['','']
 
     
     
@@ -129,8 +145,12 @@ class ODE(Block):
         # Solve at time t with time step ts
         self.outputs[0]._values[it]=np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T)
         
-    def Label(self):
+    def LabelBlock(self):
         return str(self.a)+'\n'+str(self.b)
+
+    def LabelConnections(self):
+        return ['','']
+        
         
 class FunctionBlock(Block):
     def __init__(self,input_variable,output_variable,function):
@@ -143,8 +163,11 @@ class FunctionBlock(Block):
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=self.function(self.InputValues(it)[0])
 
-    def Label(self):
+    def LabelBlock(self):
         return 'f(t)'
+        
+    def LabelConnections(self):
+        return ['','']
         
         
 #class Switch(Block):

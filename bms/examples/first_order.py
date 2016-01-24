@@ -6,7 +6,7 @@ Created on Tue Dec 22 18:34:19 2015
 """
 
 import bms
-from bms.inputs.functions import Ramp
+from bms.signals.functions import Ramp
 from bms.blocks.continuous import ODE
 
 K=1.
@@ -22,6 +22,8 @@ ds=bms.DynamicSystem(10,100,[block])
 #print(res)
 ds.Simulate()
 #ds.PlotVariables()
+
+ds.DrawModel()
 
 ## External plot for verification
 import matplotlib.pyplot as plt

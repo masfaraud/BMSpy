@@ -5,15 +5,15 @@ Created on Wed Jan 13 16:22:26 2016
 @author: steven
 """
 
-from bms import Input
+from bms import Signal
 
-class WLTP1(Input):
+class WLTP1(Signal):
     """
     WLTP classe 1 cycle
     Caution! speed in m/s, not in km/h!
     """    
     def __init__(self,name):
-        Input.__init__(self,name)
+        Signal.__init__(self,name)
         self.data=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
                    0.0, 0.0, 0.05, 0.86, 1.58, 2.22, 2.8, 3.33, 3.83, 4.27, 
                    4.63, 4.91, 5.08, 5.22, 5.24, 5.11, 4.69, 3.97, 3.0, 1.97, 
@@ -128,13 +128,13 @@ class WLTP1(Input):
                 return 0.
         self.function=function         
 
-class WLTP2(Input):
+class WLTP2(Signal):
     """
     WLTP classe 2 cycle
     Caution! speed in m/s, not in km/h!
     """    
     def __init__(self,name):
-        Input.__init__(self,name)
+        Signal.__init__(self,name)
         self.data=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
                    0.0, 0.0, 0.0, 0.33, 0.72, 1.36, 2.02, 2.61, 3.16, 3.52, 
                    3.69, 3.72, 3.69, 3.63, 3.47, 3.08, 2.47, 1.72, 1.05, 0.5, 
@@ -327,13 +327,13 @@ class WLTP2(Input):
                 return 0.
         self.function=function         
 
-class WLTP3(Input):
+class WLTP3(Signal):
     """
     WLTP classe 3 cycle
     Caution! speed in m/s, not in km/h!
     """    
     def __init__(self,name):
-        Input.__init__(self,name)
+        Signal.__init__(self,name)
         self.data=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 
                    0.0, 0.0, 0.0, 0.33, 0.72, 1.36, 2.02, 2.61, 3.16, 3.52, 
                    3.69, 3.72, 3.69, 3.63, 3.47, 3.08, 2.47, 1.72, 1.05, 0.5, 

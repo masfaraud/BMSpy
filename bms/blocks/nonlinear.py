@@ -79,8 +79,9 @@ class Saturation(Block):
             value=self.max_value
         self.outputs[0]._values[it]=value
         
-    def Label(self):
-        return 'min<x<max'
+    def LabelBlock(self):
+        return 'Sat'
+        
 
 class Coulomb(Block):
     def __init__(self,input_variable,speed_variable,output_variable,max_value,tolerance=0):
@@ -106,5 +107,5 @@ class Coulomb(Block):
 #        print(input_value,speed,output)
         self.outputs[0]._values[it]=output
         
-    def Label(self):
+    def LabelBlock(self):
         return 'Clb'
