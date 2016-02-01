@@ -13,6 +13,13 @@ import dill
 
 class Variable:
     def __init__(self,names='',initial_values=[0]):
+        """ Defines a variable
+        :param names: Defines full name and short name.
+                        If names is a string the two names will be identical
+                        otherwise names should be a tuple of strings (full_name,short_name) 
+        
+        
+        """    
         if type(names)==str:
             self.name=names
             self.short_name=names 
@@ -42,6 +49,7 @@ class Variable:
     
         
 class Signal(Variable):
+    """ Abstract class of signal """
     def __init__(self,names):
         if type(names)==str:
             self.name=names
@@ -70,6 +78,7 @@ class Signal(Variable):
     
 
 class Block:
+    """ Abstract class of block """
     def __init__(self,inputs,outputs,max_input_order,max_output_order):
         self.inputs=[]
         self.outputs=[]        
@@ -130,9 +139,12 @@ class ModelError(Exception):
 class DynamicSystem:
     def __init__(self,te,ns,blocks=[]):
         """
-        te: time of simulation's end 
-        ns: number of steps
+        Defines a dynamic system that can simulate itself
         
+        :param te: time of simulation's end 
+        :param ns: number of steps
+        :param blocks: (optional) list of blocks defining the model        
+            
         """
         self.te=te
         self.ns=ns
@@ -306,7 +318,27 @@ class DynamicSystem:
 #                print('write @ ',it+self.max_order)
                 block.Solve(it+self.max_order+1,self.ts)
 #                print(block)
-                
+
+    def VariablesValues(self,variables,t): 
+        """
+            Returns the value of given variables at time t
+            :param variables: one variable or a list of variables
+            :param t: time of evaluation
+        """                
+        if (t>self.te)|(t<0):
+            i=int(t/self.ts)#time step            
+            ti=self.ts*i
+            if type(variables)==list:
+                values=[]
+                for variable in variables:
+                    # interpolation
+                    return variable.values[i]*(1+ti-t)+variable.values[i+1]*(t-ti)
+
+            else:
+                # interpolation
+                return variables.values[i]*(1+ti-t)+variables.values[i+1]*(t-ti)
+        else raise ValueError
+        
     def PlotVariables(self,subplots_variables=None):
         if subplots_variables==None:
             subplots_variables=[self.variables]
@@ -348,6 +380,7 @@ class DynamicSystem:
         self.__dict__ = dic        
         
 def Load(file):
+    """ Loads a model from specified file """
     with open(file,'rb') as file:
         model=dill.load(file)
         return model
