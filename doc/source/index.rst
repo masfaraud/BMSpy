@@ -9,44 +9,10 @@ Welcome to BMSpy's documentation!
 Contents:
 
 .. toctree::
-   :maxdepth: 2
+   :numbered:
+
+   reference
 
 
-.. automodule:: bms.core
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-.. automodule:: bms.signals
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-
-.. automodule:: bms.signals.functions
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-.. automodule:: bms.signals.wltp
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-.. automodule:: bms.blocks.continuous
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-.. automodule:: bms.blocks.nonlinear
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
 
 
