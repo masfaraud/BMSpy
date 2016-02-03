@@ -1,15 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan  6 21:51:09 2016
+Collection of non-linear blocks
 
-@author: steven
 """
 
 from bms import Block
 
 class DeadZone(Block):
     """
-            
+        
     """
     def __init__(self,input_variable,output_variable,zone_width):
         Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)

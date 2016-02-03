@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 13 16:22:26 2016
+WLTP signals
 
-@author: steven
 """
 
 from bms import Signal

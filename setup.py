@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec 29 13:14:53 2015
+Setup install script for BMS
 
-@author: steven
 """
 
 from setuptools import setup
@@ -12,7 +11,7 @@ def readme():
         return f.read()
 
 setup(name='bms',
-      version='0.0.5',
+      version='0.0.6',
       description='Block-Model Simulator for python',
       long_description=readme(),
       keywords='block model simulation simulator time',

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Oct 21 18:23:50 2015
+Core of BMS. All content of this file is imported by bms, and is therefore in bms
 
-@author: Steven Masfaraud
+This file defines the base of BMS. 
+
 """
 
 import numpy as np
@@ -13,9 +14,10 @@ import dill
 
 class Variable:
     """ Defines a variable
+    
     :param names: Defines full name and short name.
-                    If names is a string the two names will be identical
-                    otherwise names should be a tuple of strings (full_name,short_name) 
+    If names is a string the two names will be identical
+    otherwise names should be a tuple of strings (full_name,short_name) 
     
     """    
     def __init__(self,names='',initial_values=[0]):
@@ -99,6 +101,11 @@ class Block:
         self.max_order=max(self.max_input_order,self.max_output_order)
         
     def AddInput(self,variable):
+        """
+        Add one more variable as an input of the block
+        
+        :param variable: variable (or signal as it is also a variable)
+        """
         if isinstance(variable,Variable):
             self.inputs.append(variable)
         else:
@@ -106,12 +113,20 @@ class Block:
             raise TypeError
 
     def AddOutput(self,variable):
+        """
+            Add one more variable as an output of the block
+            
+            :param variable: variable (or signal as it is also a variable)
+        """
         if isinstance(variable,Variable):
             self.outputs.append(variable)
         else:
             raise TypeError
 
     def InputValues(self,it):
+        """
+            Returns the input values at a given iteration for solving the block outputs
+        """
 #        print(self,it)
         # Provides values in inputs values for computing at iteration it
         I=np.zeros((self.n_inputs,self.max_input_order))
@@ -162,17 +177,23 @@ class DynamicSystem:
         self._utd_graph=False# True if graph is up-to-date
         
     def AddBlock(self,block):
+        """
+        Add the given block to the model and also its input/output variables
+        """
         if isinstance(block,Block):
             self.blocks.append(block)
             self.max_order=max(self.max_order,block.max_input_order-1)
             self.max_order=max(self.max_order,block.max_output_order)
             for variable in block.inputs+block.outputs:
-                self.AddVariable(variable)
+                self._AddVariable(variable)
         else:
             raise TypeError
         self._utd_graph=False
         
-    def AddVariable(self,variable):
+    def _AddVariable(self,variable):
+        """
+        Add a variable to the model. Should not be used by end-user
+        """
         if isinstance(variable,Signal):
             if not variable in self.variables:
                 self.signals.append(variable)
@@ -203,7 +224,10 @@ class DynamicSystem:
     graph=property(_get_Graph)
     
         
-    def ResolutionOrder(self):
+    def _ResolutionOrder(self):
+        """
+        Finds the blocks resolution order. Should not be used by end-user
+        """
         known_variables=self.signals[:]
         resolution_order=[]
         half_known_variables=[]
@@ -291,9 +315,9 @@ class DynamicSystem:
         
     def CheckModelConsistency(self):
         """
-            Check for model consistency:
-             - an input variable can't be set as the output of a block
-             - a variable can't be the output of more than one block
+        Check for model consistency:
+            - an input variable can't be set as the output of a block
+            - a variable can't be the output of more than one block
              
         """
         for variable in self.signals:
@@ -305,7 +329,7 @@ class DynamicSystem:
                             
     def Simulate(self):
         self.CheckModelConsistency()
-        resolution_order=self.ResolutionOrder()
+        resolution_order=self._ResolutionOrder()
         # Initialisation of variables values
         for variable in self.variables+self.signals:
 #            if not isinstance(variable,Input):
@@ -321,9 +345,10 @@ class DynamicSystem:
 
     def VariablesValues(self,variables,t): 
         """
-            Returns the value of given variables at time t
-            :param variables: one variable or a list of variables
-            :param t: time of evaluation
+        Returns the value of given variables at time t
+        
+        :param variables: one variable or a list of variables
+        :param t: time of evaluation
         """                
         if (t>self.te)|(t<0):
             i=int(t/self.ts)#time step            

@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec 29 14:28:38 2015
+Collection of continuous blocks
 
-@author: steven
 """
 
 
