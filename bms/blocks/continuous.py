@@ -11,10 +11,10 @@ from bms import Block,np,math
 
 
 class Gain(Block):
+    """
+        output=value* input    
+    """
     def __init__(self,input_variable,output_variable,value):
-        """
-            output=value* input    
-        """
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.value=value
 
@@ -29,10 +29,10 @@ class Gain(Block):
 
 
 class Sum(Block):
+    """
+        output=input1+input2    
+    """
     def __init__(self,input_variable1,input_variable2,output_variable):
-        """
-            output=input1+input2    
-        """
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
     def Solve(self,it,ts):
@@ -45,10 +45,10 @@ class Sum(Block):
         return ['+','+']
 
 class Subtraction(Block):
+    """
+        output=input1-input2    
+    """
     def __init__(self,input_variable1,input_variable2,output_variable):
-        """
-            output=input1-input2    
-        """
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
     def Solve(self,it,ts):
@@ -62,10 +62,11 @@ class Subtraction(Block):
 
         
 class Product(Block):
+    """
+        output=input1*input2    
+    """
     def __init__(self,input_variable1,input_variable2,output_variable):
-        """
-            output=input1*input2    
-        """
+
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
     def Solve(self,it,ts):
@@ -79,10 +80,11 @@ class Product(Block):
         return ['','']
 
 class Division(Block):
+    """
+        output=input1/input2    
+    """
     def __init__(self,input_variable1,input_variable2,output_variable):
-        """
-            output=input1/input2    
-        """
+
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
     def Solve(self,it,ts):
@@ -98,13 +100,13 @@ class Division(Block):
     
     
 class ODE(Block):
-    def __init__(self,input_variable,output_variable,a,b):
-        """4
+    """
         a,b are vectors of coefficients such as H, the transfert function of
-            the block, may be written as:
-            H(p)=(a[i]p**i)/(b[j]p**j) (Einstein sum on i,j)
-            p is Laplace's variable 
-        """
+        the block, may be written as:
+        H(p)=(a[i]p**i)/(b[j]p**j) (Einstein sum on i,j)
+        p is Laplace's variable 
+    """
+    def __init__(self,input_variable,output_variable,a,b):
         Block.__init__(self,[input_variable],[output_variable],len(a),len(b)-1)
 #        self.AddInput(input_variable)
 #        self.AddOutput(output_variable)
@@ -153,10 +155,11 @@ class ODE(Block):
         
         
 class FunctionBlock(Block):
+    """
+        output=f(input)    
+    """
     def __init__(self,input_variable,output_variable,function):
-        """
-            output=f(input)    
-        """
+
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.function=function
 

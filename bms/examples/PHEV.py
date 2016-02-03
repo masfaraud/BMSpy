@@ -10,7 +10,7 @@ from bms.inputs.wltp import WLTP3
 from bms.blocks.continuous import Gain
 
 Vc=WLTP3('WLTP Cycle')
-V=bms.Variable('Speed')
+V=bms.Variable(('Vehicle Speed','V'))
 block=Gain(Vc,V,1)
 ds=bms.DynamicSystem(450,5000,[block])
 ds.Simulate()

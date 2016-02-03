@@ -60,13 +60,12 @@ class Hysteresis(Block):
 
         
 class Saturation(Block):
+    """
+        output=min_value if input < min_value
+        output=max_value if input > max_value
+        output=input if  min_value < input < max_value        
+    """
     def __init__(self,input_variable,output_variable,min_value,max_value):
-        """
-            output=min_value if input < min_value
-            output=max_value if input > max_value
-            output=input if  min_value < input < max_value
-            
-        """
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.min_value=min_value
         self.max_value=max_value
@@ -84,11 +83,11 @@ class Saturation(Block):
         
 
 class Coulomb(Block):
+    """
+        Return coulomb force under condition of speed and sum of forces (input)
+        
+    """
     def __init__(self,input_variable,speed_variable,output_variable,max_value,tolerance=0):
-        """
-            Return coulomb force under condition of speed and sum of forces (input)
-            
-        """
         Block.__init__(self,[input_variable,speed_variable],[output_variable],1,0)
         self.max_value=max_value
         self.tolerance=tolerance

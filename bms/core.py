@@ -12,14 +12,13 @@ import networkx as nx
 import dill
 
 class Variable:
+    """ Defines a variable
+    :param names: Defines full name and short name.
+                    If names is a string the two names will be identical
+                    otherwise names should be a tuple of strings (full_name,short_name) 
+    
+    """    
     def __init__(self,names='',initial_values=[0]):
-        """ Defines a variable
-        :param names: Defines full name and short name.
-                        If names is a string the two names will be identical
-                        otherwise names should be a tuple of strings (full_name,short_name) 
-        
-        
-        """    
         if type(names)==str:
             self.name=names
             self.short_name=names 
@@ -78,7 +77,8 @@ class Signal(Variable):
     
 
 class Block:
-    """ Abstract class of block """
+    """ Abstract class of block: this class should not be instanciate directly
+    """
     def __init__(self,inputs,outputs,max_input_order,max_output_order):
         self.inputs=[]
         self.outputs=[]        
@@ -137,15 +137,15 @@ class ModelError(Exception):
             
         
 class DynamicSystem:
-    def __init__(self,te,ns,blocks=[]):
-        """
-        Defines a dynamic system that can simulate itself
+    """
+    Defines a dynamic system that can simulate itself
+    
+    :param te: time of simulation's end 
+    :param ns: number of steps
+    :param blocks: (optional) list of blocks defining the model        
         
-        :param te: time of simulation's end 
-        :param ns: number of steps
-        :param blocks: (optional) list of blocks defining the model        
-            
-        """
+    """
+    def __init__(self,te,ns,blocks=[]):
         self.te=te
         self.ns=ns
         self.ts=self.te/(self.ns)# time step
@@ -337,7 +337,7 @@ class DynamicSystem:
             else:
                 # interpolation
                 return variables.values[i]*(1+ti-t)+variables.values[i+1]*(t-ti)
-        else raise ValueError
+        else: raise ValueError
         
     def PlotVariables(self,subplots_variables=None):
         if subplots_variables==None:
