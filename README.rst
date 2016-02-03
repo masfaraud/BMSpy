@@ -12,14 +12,14 @@ Documentation
 
 Reference
 ---------
-A web documentation is available on pythonhosted, generated with sphinx: __https://pythonhosted.org/bms/
+A web documentation is available on pythonhosted, generated with sphinx: https://pythonhosted.org/bms/
 
 Tutorial
 --------
-The github wiki (__https://github.com/masfaraud/BMSpy/wiki) provides some tutorial on how installing and using BMS
+The github wiki (https://github.com/masfaraud/BMSpy/wiki) provides some tutorial on how installing and using BMS
 
 Examples
 --------
-Some examples on how defining the model and working with the results are provided in the examples/ folder on github: __https://github.com/masfaraud/BMSpy/tree/master/bms/examples
+Some examples on how defining the model and working with the results are provided in the examples/ folder on github: https://github.com/masfaraud/BMSpy/tree/master/bms/examples
 
 

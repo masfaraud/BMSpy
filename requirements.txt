@@ -1,5 +1,0 @@
-numpy
-matplotlib
-networkx
-dill
-cma

@@ -350,18 +350,19 @@ class DynamicSystem:
         :param variables: one variable or a list of variables
         :param t: time of evaluation
         """                
-        if (t>self.te)|(t<0):
-            i=int(t/self.ts)#time step            
+        if (t<self.te)|(t>0):
+            i=t//self.ts#time step            
             ti=self.ts*i
             if type(variables)==list:
                 values=[]
                 for variable in variables:
                     # interpolation
-                    return variable.values[i]*(1+ti-t)+variable.values[i+1]*(t-ti)
+                    values.append(variables.values[i]*((ti-t)/self.ts+1)+variables.values[i+1]*(t-ti)/self.ts)
+                return values
 
             else:
                 # interpolation
-                return variables.values[i]*(1+ti-t)+variables.values[i+1]*(t-ti)
+                return variables.values[i]*((ti-t)/self.ts+1)+variables.values[i+1]*(t-ti)/self.ts
         else: raise ValueError
         
     def PlotVariables(self,subplots_variables=None):

@@ -23,7 +23,7 @@ ds=bms.DynamicSystem(10,100,[block])
 ds.Simulate()
 #ds.PlotVariables()
 
-ds.DrawModel()
+#ds.DrawModel()
 
 ## External plot for verification
 import matplotlib.pyplot as plt
@@ -33,4 +33,3 @@ plt.plot(ds.t,s.values)
 s_inf=K*(ds.t.copy()-tau)
 plt.plot(ds.t,e.values)
 plt.plot(ds.t,s_inf)
-
