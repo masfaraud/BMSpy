@@ -35,12 +35,12 @@ class Variable:
         self._values=np.array([])
         self.max_order=0
     
-    def InitValues(self,ns,ts,max_order):
+    def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
         self._values=np.zeros(ns+max_order+1)
-        self.ForwardValues()
+        self._ForwardValues()
             
-    def ForwardValues(self):
+    def _ForwardValues(self):
         pass
     
     def _get_values(self):
@@ -66,14 +66,14 @@ class Signal(Variable):
         self.max_order=0
         
         
-    def InitValues(self,ns,ts,max_order):
+    def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
         self._values=np.zeros(ns+max_order+1)
         for i in range(ns+1):
             self._values[i+max_order]=self.function(i*ts)
-        self.ForwardValues()
+        self._ForwardValues()
             
-    def ForwardValues(self):
+    def _ForwardValues(self):
         pass
 
     
@@ -90,9 +90,9 @@ class Block:
         
 
         for variable in inputs:
-            self.AddInput(variable)
+            self._AddInput(variable)
         for variable in outputs:
-            self.AddOutput(variable)
+            self._AddOutput(variable)
             
 #        self.input_orders=
 #        self.output_orders=output_orders
@@ -100,7 +100,7 @@ class Block:
         self.max_output_order=max_output_order
         self.max_order=max(self.max_input_order,self.max_output_order)
         
-    def AddInput(self,variable):
+    def _AddInput(self,variable):
         """
         Add one more variable as an input of the block
         
@@ -112,7 +112,7 @@ class Block:
             print('Error: ',variable.name,variable,' given is not a variable')
             raise TypeError
 
-    def AddOutput(self,variable):
+    def _AddOutput(self,variable):
         """
             Add one more variable as an output of the block
             
@@ -333,7 +333,7 @@ class DynamicSystem:
         # Initialisation of variables values
         for variable in self.variables+self.signals:
 #            if not isinstance(variable,Input):
-            variable.InitValues(self.ns,self.ts,self.max_order)
+            variable._InitValues(self.ns,self.ts,self.max_order)
 #            else:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           

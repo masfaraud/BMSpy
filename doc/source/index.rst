@@ -9,8 +9,10 @@ Welcome to BMSpy's documentation!
 Contents:
 
 .. toctree::
-   :numbered:
 
+   getting_started
+   development
+   tutorial
    reference
 
 
