@@ -10,13 +10,9 @@ BMS is designed as a lightweight, fully scriptable, open-source equivalent to si
 Documentation
 =============
 
-Reference
----------
-A web documentation is available on pythonhosted, generated with sphinx: https://pythonhosted.org/bms/
-
-Tutorial
---------
-The github wiki (https://github.com/masfaraud/BMSpy/wiki) provides some tutorial on how installing and using BMS
+Reference, tutorial
+-------------------
+A web documentation is available on pythonhosted, generated with sphinx, which includes some tutorial and reference: https://pythonhosted.org/bms/
 
 Examples
 --------

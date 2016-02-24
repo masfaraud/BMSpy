@@ -10,8 +10,9 @@ def readme():
     with open('README.rst') as f:
         return f.read()
 
+import bms
 setup(name='bms',
-      version='0.0.6',
+      version=bms.__version__,# in bms __init__
       description='Block-Model Simulator for python',
       long_description=readme(),
       keywords='block model simulation simulator time',
@@ -22,5 +23,4 @@ setup(name='bms',
       packages=['bms','bms.blocks','bms.signals'],
       package_dir={'bms':'bms'},
       install_requires=['numpy','matplotlib','networkx','dill','cma'],
-      bugtrack_url='https://github.com/masfaraud/BMSpy/issues',
       classifiers=['Topic :: Scientific/Engineering','Development Status :: 3 - Alpha'])

@@ -6,17 +6,22 @@ The DynamicSystem Class is a python class defined by BMS core. It allows to defi
 Defining a model
 ----------------
 
+First, we need to import bms:
+
 .. code:: python
-    import bms
 
-Defining the inputs
-^^^^^^^^^^^^^^^^^^^
+  import bms
 
-Inputs are special variable in the model which are not computed. See the [inputs list](Inputs)
+Defining signals
+^^^^^^^^^^^^^^^^
+
+Inputs are special variable in the model which are not computed. See the :ref:`signals-reference` list in reference
+
 Here we define a ramp named which name is e
 
 .. code:: python
 
+  from bms.signals.functions import Ramp
   e=Ramp('e',1.)
 
 Defining Variables
@@ -30,13 +35,14 @@ Let's define a variable s which will be the output of a first order block
 
 Defining Blocks
 ^^^^^^^^^^^^^^^
+See the list of available :ref:`blocks-reference`
 
-Let's define this block:
+For this example, let's define a first order block:
 
 .. code:: python
 
    from bms.blocks.continuous import ODE
-    block=ODE(e,s,[1],[1,3])
+   block=ODE(e,s,[1],[1,3])
 
 Defining the model
 ^^^^^^^^^^^^^^^^^^
@@ -74,7 +80,7 @@ Values of variables at a given time t is accessible by:
 
 .. code:: python
 
-  ds.VariablesValues(t)
+  model.VariablesValues(t)
 
 
 The time values vector of a variable is accessible via the values attribute:
@@ -82,8 +88,8 @@ The time values vector of a variable is accessible via the values attribute:
 .. code:: python
 
      import matplotlib.pyplot as plt
-     plt.plot(ds.t,e.values)
-     plt.plot(ds.t,s.values)
+     plt.plot(model.t,e.values)
+     plt.plot(model.t,s.values)
 
 
 

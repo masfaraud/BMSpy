@@ -10,6 +10,8 @@ Core
   :inherited-members:
   :show-inheritance:
 
+.. _signals-reference:
+
 Signals
 -------
 
@@ -28,14 +30,16 @@ Functions
   :inherited-members:
   :show-inheritance:
 
-Signals
-^^^^^^^
+WLTP signals
+^^^^^^^^^^^^
 
 .. automodule:: bms.signals.wltp
   :members:
   :undoc-members:
   :inherited-members:
   :show-inheritance:
+
+.. _blocks-reference:
 
 Blocks
 ------

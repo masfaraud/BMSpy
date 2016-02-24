@@ -10,13 +10,18 @@ Release Notes
 
 see also releases on github: https://github.com/masfaraud/BMSpy/releases
 
+Version 0.0
+^^^^^^^^^^^
+
+This is the alpha version. Code standards change rapidely, and compatibility is  this version is not guarentied.
+
 Version 0.0.6
-^^^^^^^^^^^^^
-* Shinx Documentation
+~~~~~~~~~~~~~
+* Sphinx Documentation
 * Variables accessible at time value by DynamicSystem method
 
 Version 0.0.5
-^^^^^^^^^^^^^
+~~~~~~~~~~~~~
 
 * Version number standard change
 * Model Saving/Loading from file
@@ -25,24 +30,24 @@ Version 0.0.5
 * Drag & Drop Model drawer
 
 Version 0.04
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 * Reorganisation into subpackages of blocks and inputs
 
 Version 0.03
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 * Bug correction for float time step
 * Redefinition of number of steps
 
 Version 0.02
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 * New blocks such as saturation or coulomb
 * Bug fixes
 
 Version 0.01
-^^^^^^^^^^^^
+~~~~~~~~~~~~
 
 Initial release
 

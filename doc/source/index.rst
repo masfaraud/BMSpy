@@ -11,10 +11,8 @@ Contents:
 .. toctree::
 
    getting_started
-   development
    tutorial
+   development
    reference
-
-
 
 

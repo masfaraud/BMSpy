@@ -58,7 +58,7 @@ block11a=Product(Tm,W,Pm)
 ds=bms.DynamicSystem(10,2000,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
 
 
-#ds.DrawModel()
+ds.DrawModel()
 ds.Simulate()
 ds.PlotVariables([[Wc,W,dW],[Tm,Text,T],])
 ds.PlotVariables([[Um,e,Uind],[Pe,Pm],[Iind]])
