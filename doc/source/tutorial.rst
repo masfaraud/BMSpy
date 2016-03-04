@@ -24,6 +24,11 @@ Here we define a ramp named which name is e
   from bms.signals.functions import Ramp
   e=Ramp('e',1.)
 
+.. seealso::
+ 
+  .. autoclass:: bms.signals.functions.Ramp
+     :members:
+
 Defining Variables
 ^^^^^^^^^^^^^^^^^^
 
@@ -32,6 +37,12 @@ Let's define a variable s which will be the output of a first order block
 .. code:: python
 
   s=bms.Variable('s')
+
+.. seealso::
+ 
+  .. autoclass:: bms.Variable
+     :members:
+
 
 Defining Blocks
 ^^^^^^^^^^^^^^^
@@ -44,6 +55,13 @@ For this example, let's define a first order block:
    from bms.blocks.continuous import ODE
    block=ODE(e,s,[1],[1,3])
 
+.. seealso::
+ 
+  .. autoclass:: bms.blocks.continuous.ODE
+     :members:
+
+
+
 Defining the model
 ^^^^^^^^^^^^^^^^^^
 
@@ -53,7 +71,11 @@ Defining the model
     ns=2000 # number of time steps
     model=bms.DynamicSystem(te,ns,[block])
 
-The blocks are given in a list as third argument
+.. seealso::
+ 
+  .. autoclass:: bms.DynamicSystem
+
+The blocks are given in a list as third argument.
 
 Model methods
 -------------
@@ -66,12 +88,21 @@ Simulating
 
     model.Simulate()
 
+.. seealso::
+  .. autoclass:: bms.DynamicSystem
+     :members: Simulate
+
 Plotting variables
 ^^^^^^^^^^^^^^^^^^
 
 .. code:: python
 
     model.PlotVariables()
+
+.. seealso::
+  .. autoclass:: bms.DynamicSystem
+     :members: PlotVariables
+
 
 Accessing values
 ^^^^^^^^^^^^^^^^
@@ -81,6 +112,10 @@ Values of variables at a given time t is accessible by:
 .. code:: python
 
   model.VariablesValues(t)
+
+.. seealso::
+  .. autoclass:: bms.DynamicSystem
+     :members: VariablesValues
 
 
 The time values vector of a variable is accessible via the values attribute:
@@ -92,9 +127,8 @@ The time values vector of a variable is accessible via the values attribute:
      plt.plot(model.t,s.values)
 
 
-
-Examples
-========
+Other Examples
+==============
 See the project examples folder on github: https://github.com/masfaraud/BMSpy/tree/master/bms/examples
 
 
