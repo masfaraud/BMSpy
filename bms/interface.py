@@ -11,9 +11,10 @@ import matplotlib.patches as mpatches
 #import matplotlib.cm as cm
 import numpy as np
 import bms
-import cma
+#import cma
 import math
 import itertools
+import networkx as nx
 
 class ModelDrawer:
 
@@ -30,93 +31,98 @@ class ModelDrawer:
         self.artists_from_element={}
         
         self.noeud_clic=None
-        # Initialisation of positions
-        self.position={}
-        # Random positionning
-#        for block in self.model.blocks:
-#            self.position[block]=[random.random(),random.random()]
-#        for variable in self.model.variables+self.model.signals:
-#            self.position[variable]=[random.random(),random.random()]
-        # optimized positionning
-#        lx=# len
-        dof={}
-        # Parametrizing
-        i=0
-        for block in self.model.blocks:
-            dof[block]=[i,i+1]
-            i+=2
-        for variables in self.model.variables+self.model.signals:
-            dof[variables]=[i,i+1]
-            i+=2
-            
-        print(len(list(dof.keys())))
 
-        # function definition
-        cp=100000# penalty coefficient
-        dt=self.l*5# target distance between stuff
-        def f(x,verbose=False):
-            if verbose:
-                print('======================')
-            r=0# result
-            for block in self.model.blocks:
-                db=dof[block]
-                # each block must have its inputs at its left
-                for variable in block.inputs:
-                    dv=dof[variable]
-                    xb=x[db]
-                    xv=x[dv]
-                    if xb[0]<xv[0]:
-                        r+=cp*(xv[0]-xb[0])**2
-                    # minimize distance between block and connections
-                    d=math.sqrt((xb[0]-xv[0])**2+(xb[1]-xv[1])**2)
-                    if d>dt:
-                        r+=d-dt
-                        if verbose:
-                           print('dbc: ',d-dt) 
-                    # connection must be as horizontal as possible
-                    if verbose:
-                       print('hz: ',abs(xb[1]-xv[1])) 
-                    r+=abs(xb[1]-xv[1])
-                # each block must have its outputs at its right
-                for variable in block.outputs:
-                    dv=dof[variable]
-                    xb=x[db]
-                    xv=x[dv]
-                    if xb[0]>xv[0]:
-                        r+=cp*(xb[0]-xv[0])**2
-                        if verbose:
-                            print('output right: ',cp*(xb[0]-xv[0])**2)
-                            
-                    # minimize distance between block and connections
-                    d=math.sqrt((xb[0]-xv[0])**2+(xb[1]-xv[1])**2)
-                    if d>dt:
-                        r+=d-dt
-                    # connection must be as horizontal as possible
-                    r+=abs(xb[1]-xv[1])
-                    if verbose:
-                        print(abs(xb[1]-xv[1]))
-            
-            # Avoid closeness of elements:
-            for e1,e2 in itertools.combinations(self.model.signals+self.model.blocks+self.model.variables,2):
-                xe1=dof[e1]
-                xe2=dof[e2]
-                de12=math.sqrt((xe1[0]-xe2[0])**2+(xe1[1]-xe2[1])**2)
-                if de12<dt:
-                    r+=abs((dt-de12)*cp)
-                    if verbose:
-                        print(abs((dt-de12)*cp))
-#            print(r)      
-            return r
-                        
-        options={'bounds':[-50*self.l,50*self.l],'ftarget':0}#,'tolfun':1e-4,'ftarget':-ndemuls*(1-0.07),'verbose':-9}
-        res=cma.fmin(f,np.random.random(2*len(list(dof.keys()))),2*dt,options=options)
-        xopt=res[0]
-#        f_opt=-res[1]
-        print(xopt)
-        f(xopt,True)
-        for element in self.model.signals+self.model.blocks+self.model.variables:
-            de=dof[element]
-            self.position[element]=(xopt[de[0]],xopt[de[1]])
+
+        # Initialisation of positions
+        # networkx positionning
+        self.position=nx.spring_layout(self.model.graph)
+
+#        self.position={}
+#        # Random positionning
+##        for block in self.model.blocks:
+##            self.position[block]=[random.random(),random.random()]
+##        for variable in self.model.variables+self.model.signals:
+##            self.position[variable]=[random.random(),random.random()]
+#        # optimized positionning
+##        lx=# len
+#        dof={}
+#        # Parametrizing
+#        i=0
+#        for block in self.model.blocks:
+#            dof[block]=[i,i+1]
+#            i+=2
+#        for variables in self.model.variables+self.model.signals:
+#            dof[variables]=[i,i+1]
+#            i+=2
+#            
+#        print(len(list(dof.keys())))
+#
+#        # function definition
+#        cp=100000# penalty coefficient
+#        dt=self.l*5# target distance between stuff
+#        def f(x,verbose=False):
+#            if verbose:
+#                print('======================')
+#            r=0# result
+#            for block in self.model.blocks:
+#                db=dof[block]
+#                # each block must have its inputs at its left
+#                for variable in block.inputs:
+#                    dv=dof[variable]
+#                    xb=x[db]
+#                    xv=x[dv]
+#                    if xb[0]<xv[0]:
+#                        r+=cp*(xv[0]-xb[0])**2
+#                    # minimize distance between block and connections
+#                    d=math.sqrt((xb[0]-xv[0])**2+(xb[1]-xv[1])**2)
+#                    if d>dt:
+#                        r+=d-dt
+#                        if verbose:
+#                           print('dbc: ',d-dt) 
+#                    # connection must be as horizontal as possible
+#                    if verbose:
+#                       print('hz: ',abs(xb[1]-xv[1])) 
+#                    r+=abs(xb[1]-xv[1])
+#                # each block must have its outputs at its right
+#                for variable in block.outputs:
+#                    dv=dof[variable]
+#                    xb=x[db]
+#                    xv=x[dv]
+#                    if xb[0]>xv[0]:
+#                        r+=cp*(xb[0]-xv[0])**2
+#                        if verbose:
+#                            print('output right: ',cp*(xb[0]-xv[0])**2)
+#                            
+#                    # minimize distance between block and connections
+#                    d=math.sqrt((xb[0]-xv[0])**2+(xb[1]-xv[1])**2)
+#                    if d>dt:
+#                        r+=d-dt
+#                    # connection must be as horizontal as possible
+#                    r+=abs(xb[1]-xv[1])
+#                    if verbose:
+#                        print(abs(xb[1]-xv[1]))
+#            
+#            # Avoid closeness of elements:
+#            for e1,e2 in itertools.combinations(self.model.signals+self.model.blocks+self.model.variables,2):
+#                xe1=dof[e1]
+#                xe2=dof[e2]
+#                de12=math.sqrt((xe1[0]-xe2[0])**2+(xe1[1]-xe2[1])**2)
+#                if de12<dt:
+#                    r+=abs((dt-de12)*cp)
+#                    if verbose:
+#                        print(abs((dt-de12)*cp))
+##            print(r)      
+#            return r
+#                        
+#        options={'bounds':[-50*self.l,50*self.l],'ftarget':0}#,'tolfun':1e-4,'ftarget':-ndemuls*(1-0.07),'verbose':-9}
+#        res=cma.fmin(f,np.random.random(2*len(list(dof.keys()))),2*dt,options=options)
+#        xopt=res[0]
+##        f_opt=-res[1]
+#        print(xopt)
+#        f(xopt,True)
+#        for element in self.model.signals+self.model.blocks+self.model.variables:
+#            de=dof[element]
+#            self.position[element]=(xopt[de[0]],xopt[de[1]])
 
 
         # Drawing

@@ -367,7 +367,7 @@ class DynamicSystem:
         
     def PlotVariables(self,subplots_variables=None):
         if subplots_variables==None:
-            subplots_variables=[self.variables]
+            subplots_variables=[self.signals+self.variables]
 #        plt.figure()
         fig,axs=plt.subplots(len(subplots_variables),sharex=True)
         if len(subplots_variables)==1:
