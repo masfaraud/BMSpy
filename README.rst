@@ -16,6 +16,6 @@ A web documentation is available on pythonhosted, generated with sphinx, which i
 
 Examples
 --------
-Some examples on how defining the model and working with the results are provided in the examples/ folder on github: https://github.com/masfaraud/BMSpy/tree/master/bms/examples
+Some examples on how defining the model and working with the results are provided in the examples/ folder on github: https://github.com/masfaraud/BMSpy/tree/master/examples
 
 

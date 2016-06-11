@@ -410,3 +410,114 @@ def Load(file):
     with open(file,'rb') as file:
         model=dill.load(file)
         return model
+
+class PhysicalNode:
+    """
+    Abstract class
+    """
+    def __init__(self,name):
+        self.name=name
+        self.variable=Variable(name)
+
+class PhysicalBlock:
+    """
+    Abstract class to inherit when coding a physical block
+    """
+    def __init__(self,nodes):
+        self.nodes=nodes
+        self.variables=[Variable() for i in range(len(nodes))]
+    
+        
+class PhysicalSystem:
+    """
+    Defines a physical system
+    """
+    def __init__(self,physical_nodes,physical_blocks):
+        self.blocks=[]        
+        self.nodes=[]
+        for block in physical_blocks:
+            self.AddBlock(block)
+
+    def AddBlock(self,block):
+        if isinstance(block,PhysicalBlock):
+            self.blocks.append(block)
+            for node in block.nodes:
+                self._AddNode(node)
+        else:
+            raise TypeError
+        
+    def _AddNode(self,node):
+        if isinstance(node,PhysicalNode):
+            if not node in self.nodes:
+                self.nodes.append(node)
+        self._utd_graph=False        
+        
+        
+    def GenerateDynamicSystem(self):
+        G=nx.Graph()
+#        variables={}
+        # Adding node variables
+        for node in self.nodes:
+            G.add_node(node.variable,bipartite=0)
+        for block in self.blocks:
+            for variable in block.variables:
+                # add variable realted to connection
+                G.add_node(node.variable,bipartite=0)
+            ne,nv=block.occurence_matrix.shape                
+            # Add equations of blocs
+            for ie in range(ne): 
+                G.add_node((block,ie),bipartite=1)
+                for iv in range(nv):
+                    print(iv)
+                    if iv%2==0:
+                        G.add_edge((block,ie),block.nodes[iv//2].variable)
+                    else:
+                        G.add_edge((block,ie),block.variables[iv//2])
+        # Adding equation of physical nodes: sum of incomming variables =0
+        for node in self.nodes:
+            G.add_node((node.variable,0),bipartite=1)
+            for block in self.blocks:
+                for node_block in block.nodes:
+                    if node==node_block:
+                        G.add_edge((node.variable,0),node_block.variable)
+                        
+#        pos=nx.spring_layout(G)
+#        nx.draw(G,pos) 
+#        nx.draw_networkx_labels(G,pos)
+        G2=nx.DiGraph()
+        G2.add_nodes_from(G)
+        eq_out_var={}
+        for e in nx.bipartite.maximum_matching(G).items():
+            # eq -> variable
+            if type(e[0])==tuple:                
+                G2.add_edge(e[0],e[1])
+                eq_out_var[e[0]]=e[1]                
+            else:
+                G2.add_edge(e[1],e[0])
+                eq_out_var[e[1]]=e[0]
+                
+        for e in G.edges():
+            if type(e[0])==tuple:                
+                G2.add_edge(e[1],e[0])
+            else:
+                G2.add_edge(e[0],e[1])
+        nx.draw(G2)            
+        
+        sinks=[]
+        sources=[]    
+        for node in G2.nodes():
+            if G2.out_degree(node)==0:
+                sinks.append(node)
+            elif G2.in_degree(node)==0:
+                sources.append(node)
+        print(sinks,sources)
+        
+        if (sinks!=[])|(sources!=[]):
+            raise ModelError
+            
+        # Model is solvable: it must say to equations of blocks which is their 
+        # output variable
+        
+        print(eq_out_var)
+        for (block,ieq),variable in eq_out_var.items():
+            print(block,ieq,variable.name)

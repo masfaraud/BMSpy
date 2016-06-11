@@ -15,6 +15,10 @@ Version 0.0
 
 This is the alpha version. Code standards change rapidely, and compatibility is  this version is not guarentied.
 
+Version 0.0.7 (in developpement)
+~~~~~~~~~~~~~
+Implementation of physical modeling
+
 Version 0.0.6
 ~~~~~~~~~~~~~
 * Sphinx Documentation

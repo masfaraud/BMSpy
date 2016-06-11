@@ -23,7 +23,7 @@ ds=bms.DynamicSystem(10,100,[block])
 ds.Simulate()
 #ds.PlotVariables()
 
-ds.DrawModel()
+#ds.DrawModel()
 
 ## External plot for verification
 import matplotlib.pyplot as plt
