@@ -163,7 +163,7 @@ class DynamicSystem:
     def __init__(self,te,ns,blocks=[]):
         self.te=te
         self.ns=ns
-        self.ts=self.te/(self.ns)# time step
+        self.ts=self.te/float(self.ns)# time step
         self.t=np.linspace(0,self.te,num=ns+1)# Time vector
         self.blocks=[]
         self.variables=[]
