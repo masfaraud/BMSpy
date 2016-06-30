@@ -12,6 +12,7 @@ import math
 import networkx as nx
 import dill
 
+
 class Variable:
     """ Defines a variable
     
@@ -306,7 +307,7 @@ class DynamicSystem:
                             half_known_variables.append(variable)
 
                 else:
-                    raise NotImplemented
+                    raise NotImplementedError
                     
                              
         return resolution_order 
@@ -432,7 +433,9 @@ class PhysicalSystem:
     """
     Defines a physical system
     """
-    def __init__(self,physical_nodes,physical_blocks):
+    def __init__(self,te,ns,physical_nodes,physical_blocks):
+        self.te=te
+        self.ns=ns
         self.blocks=[]        
         self.nodes=[]
         for block in physical_blocks:
@@ -454,6 +457,7 @@ class PhysicalSystem:
         
         
     def GenerateDynamicSystem(self):
+        from bms.blocks.continuous import Sum
         G=nx.Graph()
 #        variables={}
         # Adding node variables
@@ -469,39 +473,47 @@ class PhysicalSystem:
                 G.add_node((block,ie),bipartite=1)
                 for iv in range(nv):
                     print(iv)
-                    if iv%2==0:
-                        G.add_edge((block,ie),block.nodes[iv//2].variable)
-                    else:
-                        G.add_edge((block,ie),block.variables[iv//2])
+                    if block.occurence_matrix[ie,iv]==1:
+                        if iv%2==0:
+                            G.add_edge((block,ie),block.nodes[iv//2].variable)
+                        else:
+                            G.add_edge((block,ie),block.variables[iv//2])
         # Adding equation of physical nodes: sum of incomming variables =0
         for node in self.nodes:
-            G.add_node((node.variable,0),bipartite=1)
+            G.add_node(node,bipartite=1)
             for block in self.blocks:
-                for node_block in block.nodes:
+                for inb,node_block in enumerate(block.nodes):
                     if node==node_block:
-                        G.add_edge((node.variable,0),node_block.variable)
+                        G.add_edge(node,block.variables[inb])
                         
-#        pos=nx.spring_layout(G)
-#        nx.draw(G,pos) 
-#        nx.draw_networkx_labels(G,pos)
+##        pos=nx.spring_layout(G)
+##        nx.draw(G,pos) 
+##        nx.draw_networkx_labels(G,pos)
+#        import matplotlib.pyplot as plt
+#        plt.figure()
         G2=nx.DiGraph()
         G2.add_nodes_from(G)
         eq_out_var={}
+#        print('=====================')
         for e in nx.bipartite.maximum_matching(G).items():
+#            print(e[0].__class__.__name__)
             # eq -> variable
-            if type(e[0])==tuple:                
-                G2.add_edge(e[0],e[1])
-                eq_out_var[e[0]]=e[1]                
-            else:
+            if e[0].__class__.__name__=='Variable':              
                 G2.add_edge(e[1],e[0])
-                eq_out_var[e[1]]=e[0]
+                eq_out_var[e[1]]=e[0]                
+            else:
+                G2.add_edge(e[0],e[1])
+                eq_out_var[e[0]]=e[1]
                 
         for e in G.edges():
-            if type(e[0])==tuple:                
-                G2.add_edge(e[1],e[0])
-            else:
+            if e[0].__class__.__name__=='Variable':                
                 G2.add_edge(e[0],e[1])
-        nx.draw(G2)            
+            else:
+                G2.add_edge(e[1],e[0])
+#        print('@@@@@@@@@@@@@@@@@@@@@@@@')
+#        pos=nx.spring_layout(G2)
+#        nx.draw(G2,pos)       
+#        nx.draw_networkx_labels(G2,pos)
         
         sinks=[]
         sources=[]    
@@ -518,6 +530,28 @@ class PhysicalSystem:
         # Model is solvable: it must say to equations of blocks which is their 
         # output variable
         
-        print(eq_out_var)
-        for (block,ieq),variable in eq_out_var.items():
-            print(block,ieq,variable.name)
+#        print(eq_out_var)
+        model_blocks=[]
+        for block_node,variable in eq_out_var.items():
+            print(block_node,variable)
+            if type(block_node)==tuple:
+                # Blocks writes an equation
+                model_blocks.extend(block_node[0].PartialDynamicSystem(block_node[1],variable))
+            else:
+                # Sum of incomming variables at nodes
+                # searching attached nodes
+                variables=[]
+                for block in self.blocks:
+                    try:
+                        ibn=block.nodes.index(block_node)
+                        variable2=block.variables[ibn]
+                        if variable2!=variable:
+                            variables.append(variable2)
+                    except:
+                        ValueError
+                print('v: ',variables,variable)
+                model_blocks.append(Sum(variables,variable))
+                
+        print(model_blocks)
+        return DynamicSystem(self.te,self.ns,model_blocks)
+                

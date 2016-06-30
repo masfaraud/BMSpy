@@ -29,13 +29,13 @@ class Gain(Block):
 
 class Sum(Block):
     """
-        output=input1+input2    
+        output=\sum inputs    
     """
-    def __init__(self,input_variable1,input_variable2,output_variable):
-        Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
-
+    def __init__(self,inputs,output_variable):
+        Block.__init__(self,inputs,[output_variable],1,0)
+        
     def Solve(self,it,ts):
-        self.outputs[0]._values[it]=np.dot(np.ones(2),self.InputValues(it))
+        self.outputs[0]._values[it]=np.sum(self.InputValues(it))
 
     def LabelBlock(self):
         return ''
