@@ -444,6 +444,8 @@ class PhysicalSystem:
         self.nodes=[]
         for block in physical_blocks:
             self.AddBlock(block)
+            
+        self._utd_ds=False
 
     def AddBlock(self,block):
         if isinstance(block,PhysicalBlock):
@@ -452,13 +454,13 @@ class PhysicalSystem:
                 self._AddNode(node)
         else:
             raise TypeError
+        self._utd_ds=False
         
     def _AddNode(self,node):
         if isinstance(node,PhysicalNode):
             if not node in self.nodes:
                 self.nodes.append(node)
-        self._utd_graph=False        
-        
+        self._utd_ds=False        
         
     def GenerateDynamicSystem(self):
         from bms.blocks.continuous import Sum,Gain
@@ -560,4 +562,15 @@ class PhysicalSystem:
                 
 #        print(model_blocks)
         return DynamicSystem(self.te,self.ns,model_blocks)
+        
+    def _get_ds(self):
+        if not self._utd_ds:
+            self._dynamic_system=self.GenerateDynamicSystem()
+            self._utd_ds=True
+        return self._dynamic_system    
+
+    dynamic_system=property(_get_ds)       
+        
+    def Simulate(self):
+        self.dynamic_system.Simulate()
                 

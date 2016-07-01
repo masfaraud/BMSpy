@@ -26,7 +26,7 @@ Res=Resistor(n1,n2,R)
 Cap=Capacitor(n2,n3,C)
 
 ps=bms.PhysicalSystem(4,100,[n1,n2],[Gen,Res,Cap])
-ds=ps.GenerateDynamicSystem()
+ds=ps.dynamic_system
 
 ds.Simulate()
 ds.PlotVariables([[U,n1.variable,n2.variable,n3.variable],[Res.variables[0],Cap.variables[0]]])
