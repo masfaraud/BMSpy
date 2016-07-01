@@ -1,5 +1,5 @@
-Tutorial
-========
+Dynamic system Tutorial
+=======================
 
 The DynamicSystem Class is a python class defined by BMS core. It allows to define a complete model containing all the data for simulation.
 
@@ -125,6 +125,16 @@ The time values vector of a variable is accessible via the values attribute:
      import matplotlib.pyplot as plt
      plt.plot(model.t,e.values)
      plt.plot(model.t,s.values)
+
+Physical Modelling Tutorial
+===========================
+BMS offers to model physical system by generating automaticaly the block model (DynamicSystem object of BMS) from an intuitive, physical model.
+
+The physical model consists in Physical nodes which have a potential variable and are connected by blocks which connection give a flux to the node. Example of physical nodes:
+
+ * an electric node has a voltage variable and receive fluxes (electric currents) from each block connected
+ * an hydraulic node has a pressure variable and receive flows
+
 
 
 Other Examples

@@ -19,9 +19,9 @@ class Variable:
     :param names: Defines full name and short name.
     If names is a string the two names will be identical
     otherwise names should be a tuple of strings (full_name,short_name) 
-    
+    :param hidden: inner variable to hide in plots if true
     """    
-    def __init__(self,names='',initial_values=[0]):
+    def __init__(self,names='',initial_values=[0],hidden=False):
         if type(names)==str:
             self.name=names
             self.short_name=names 
@@ -35,6 +35,7 @@ class Variable:
         self.initial_values=initial_values
         self._values=np.array([])
         self.max_order=0
+        self.hidden=hidden
     
     def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
@@ -65,7 +66,7 @@ class Signal(Variable):
             
         self._values=np.array([])
         self.max_order=0
-        
+        self.hidden=False
         
     def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
@@ -369,6 +370,7 @@ class DynamicSystem:
     def PlotVariables(self,subplots_variables=None):
         if subplots_variables==None:
             subplots_variables=[self.signals+self.variables]
+            subplots_variables=[[variable for variable in self.signals+self.variables if not variable.hidden]]
 #        plt.figure()
         fig,axs=plt.subplots(len(subplots_variables),sharex=True)
         if len(subplots_variables)==1:
@@ -416,18 +418,20 @@ class PhysicalNode:
     """
     Abstract class
     """
-    def __init__(self,name):
-        self.name=name
-        self.variable=Variable(name)
+    def __init__(self,node_name,potential_variable_name,flux_variable_name):
+        self.name=node_name
+        self.potential_variable_name=potential_variable_name
+        self.flux_variable_name=flux_variable_name
+        self.variable=Variable(potential_variable_name+' '+node_name)
 
 class PhysicalBlock:
     """
     Abstract class to inherit when coding a physical block
     """
-    def __init__(self,nodes):
+    def __init__(self,nodes,name):
         self.nodes=nodes
-        self.variables=[Variable() for i in range(len(nodes))]
-    
+        self.name=name
+        self.variables=[Variable(node.flux_variable_name+' from '+node.name+' to '+self.name) for node in nodes]
         
 class PhysicalSystem:
     """
@@ -457,7 +461,7 @@ class PhysicalSystem:
         
         
     def GenerateDynamicSystem(self):
-        from bms.blocks.continuous import Sum
+        from bms.blocks.continuous import Sum,Gain
         G=nx.Graph()
 #        variables={}
         # Adding node variables
@@ -472,7 +476,7 @@ class PhysicalSystem:
             for ie in range(ne): 
                 G.add_node((block,ie),bipartite=1)
                 for iv in range(nv):
-                    print(iv)
+#                    print(iv)
                     if block.occurence_matrix[ie,iv]==1:
                         if iv%2==0:
                             G.add_edge((block,ie),block.nodes[iv//2].variable)
@@ -522,7 +526,7 @@ class PhysicalSystem:
                 sinks.append(node)
             elif G2.in_degree(node)==0:
                 sources.append(node)
-        print(sinks,sources)
+#        print(sinks,sources)
         
         if (sinks!=[])|(sources!=[]):
             raise ModelError
@@ -533,7 +537,7 @@ class PhysicalSystem:
 #        print(eq_out_var)
         model_blocks=[]
         for block_node,variable in eq_out_var.items():
-            print(block_node,variable)
+#            print(block_node,variable)
             if type(block_node)==tuple:
                 # Blocks writes an equation
                 model_blocks.extend(block_node[0].PartialDynamicSystem(block_node[1],variable))
@@ -549,9 +553,11 @@ class PhysicalSystem:
                             variables.append(variable2)
                     except:
                         ValueError
-                print('v: ',variables,variable)
-                model_blocks.append(Sum(variables,variable))
+#                print('v: ',variables,variable)
+                v1=Variable()
+                model_blocks.append(Sum(variables,v1))
+                model_blocks.append(Gain(v1,variable,-1))
                 
-        print(model_blocks)
+#        print(model_blocks)
         return DynamicSystem(self.te,self.ns,model_blocks)
                 
