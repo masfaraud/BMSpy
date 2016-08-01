@@ -21,6 +21,7 @@ class Resistor(PhysicalBlock):
         """
         returns dynamical system blocks associated to output variable
         """
+#        print(ieq,variable.name)
         if ieq==0:
             # U1-U2=R(i1)
             if variable==self.nodes[0].variable:
@@ -79,7 +80,7 @@ class GeneratorGround(PhysicalBlock):
             # U1=0
             # U1 is output
             # U1=0
-            zero=Step('',0)
+            zero=Step('Ground',0)
             equal=Gain(zero,variable,1)
             return [equal]
         elif ieq==1:
@@ -99,18 +100,19 @@ class Capacitor(PhysicalBlock):
         """
         returns dynamical system blocks associated to output variable
         """
+
         if ieq==0:
             # U1-U2=R(i1)
             if variable==self.nodes[0].variable:
                 # U1 is output
-                # U1=R(i1)+U2
+                # U1=U2-
                 Uc=Variable(hidden=True)
                 block1=ODE(self.variables[0],Uc,[1],[0,self.C])
                 sub1=Subtraction(self.nodes[1].variable,Uc,variable)
                 return [block1,sub1]
             elif variable==self.nodes[1].variable:
                 # U2 is output
-                # U2=-R(i1)+U2
+                # U2=-R(i1)+U
                 Uc=Variable(hidden=True)
                 block1=ODE(self.variables[0],Uc,[1],[0,self.C])
                 sum1=Sum([self.nodes[0].variable,Uc],variable)

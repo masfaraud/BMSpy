@@ -21,7 +21,7 @@ class Variable:
     otherwise names should be a tuple of strings (full_name,short_name) 
     :param hidden: inner variable to hide in plots if true
     """    
-    def __init__(self,names='',initial_values=[0],hidden=False):
+    def __init__(self,names='variable',initial_values=[0],hidden=False):
         if type(names)==str:
             self.name=names
             self.short_name=names 
@@ -437,7 +437,7 @@ class PhysicalSystem:
     """
     Defines a physical system
     """
-    def __init__(self,te,ns,physical_nodes,physical_blocks):
+    def __init__(self,te,ns,physical_blocks):
         self.te=te
         self.ns=ns
         self.blocks=[]        
@@ -492,9 +492,9 @@ class PhysicalSystem:
                     if node==node_block:
                         G.add_edge(node,block.variables[inb])
                         
-##        pos=nx.spring_layout(G)
-##        nx.draw(G,pos) 
-##        nx.draw_networkx_labels(G,pos)
+        pos=nx.spring_layout(G)
+        nx.draw(G,pos) 
+        nx.draw_networkx_labels(G,pos)
 #        import matplotlib.pyplot as plt
 #        plt.figure()
         G2=nx.DiGraph()
@@ -539,7 +539,7 @@ class PhysicalSystem:
 #        print(eq_out_var)
         model_blocks=[]
         for block_node,variable in eq_out_var.items():
-#            print(block_node,variable)
+            print(block_node,variable)
             if type(block_node)==tuple:
                 # Blocks writes an equation
                 model_blocks.extend(block_node[0].PartialDynamicSystem(block_node[1],variable))
