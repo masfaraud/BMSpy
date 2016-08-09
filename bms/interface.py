@@ -135,7 +135,7 @@ class ModelDrawer:
             points=np.array([[xp-1.5*self.l,yp-0.5*self.l],[xp-0.5*self.l,yp-0.5*self.l],[xp,yp],[xp-0.5*self.l,yp+0.5*self.l],[xp-1.5*self.l,yp+0.5*self.l]])
             p=mpatches.Polygon(points,facecolor='white',edgecolor='black',picker=10)
             self.ax.add_patch(p)
-            t=self.ax.text(xp-1*self.l,yp,variable.short_name, color='black', multialignment='center', verticalalignment='center')
+            t=self.ax.text(xp-1*self.l,yp,variable.short_name, color='black', ha='center', multialignment='center', verticalalignment='center')
             self.element_from_artist[p]=variable
             self.artists_from_element[variable]=[p,t,[],[]]# polygon, text, arrows in, arrows out            
             
@@ -144,7 +144,7 @@ class ModelDrawer:
 #            p=mpatches.FancyBboxPatch((bb.xmin, bb.ymin),2*l,l,boxstyle="round,pad=0.",ec="k", fc="none", zorder=10.)
 #            self.ax.add_patch(p)
             pos=self.position[variable]
-            t=self.ax.text(pos[0],pos[1],variable.short_name, color='black',picker=10, multialignment='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
+            t=self.ax.text(pos[0],pos[1],variable.short_name, color='black',ha='center',picker=10, multialignment='center', bbox=dict(facecolor='white', edgecolor='black', boxstyle='round'))
             self.element_from_artist[t]=variable
             self.artists_from_element[variable]=[t,None,[],[]]# text,arrows in arrows out None stands for standard            
             

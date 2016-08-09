@@ -32,16 +32,36 @@ class Sum(Block):
         output=\sum inputs    
     """
     def __init__(self,inputs,output_variable):
+        print(len(inputs),[i.name for i in inputs])
         Block.__init__(self,inputs,[output_variable],1,0)
         
     def Solve(self,it,ts):
         self.outputs[0]._values[it]=np.sum(self.InputValues(it))
 
     def LabelBlock(self):
-        return ''
+        return '+'
 
     def LabelConnections(self):
         return ['+','+']
+
+class WeightedSum(Block):
+    """
+        Defines a weighted sum over inputs
+        output=\sum w_i * input_i    
+    """
+    def __init__(self,inputs,output_variable,weights):
+        print(len(inputs),[i.name for i in inputs])
+        Block.__init__(self,inputs,[output_variable],1,0)
+        self.weights=weights
+        
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=np.dot(self.weights,self.InputValues(it))
+
+    def LabelBlock(self):
+        return 'W+'
+
+    def LabelConnections(self):
+        return []
 
 class Subtraction(Block):
     """
@@ -54,7 +74,7 @@ class Subtraction(Block):
         self.outputs[0]._values[it]=np.dot(np.array([1,-1]),self.InputValues(it))   
         
     def LabelBlock(self):
-        return ''
+        return '-'
 
     def LabelConnections(self):
         return ['+','-']

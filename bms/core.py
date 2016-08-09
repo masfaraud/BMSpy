@@ -463,7 +463,7 @@ class PhysicalSystem:
         self._utd_ds=False        
         
     def GenerateDynamicSystem(self):
-        from bms.blocks.continuous import Sum,Gain
+        from bms.blocks.continuous import WeightedSum
         G=nx.Graph()
 #        variables={}
         # Adding node variables
@@ -556,9 +556,10 @@ class PhysicalSystem:
                     except:
                         ValueError
 #                print('v: ',variables,variable)
-                v1=Variable()
-                model_blocks.append(Sum(variables,v1))
-                model_blocks.append(Gain(v1,variable,-1))
+#                v1=Variable()
+                print('lv',len(variables))
+                model_blocks.append(WeightedSum(variables,variable,[-1]*len(variables)))
+#                model_blocks.append(Gain(v1,variable,-1))
                 
 #        print(model_blocks)
         return DynamicSystem(self.te,self.ns,model_blocks)
