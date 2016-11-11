@@ -7,6 +7,7 @@ This file defines the base of BMS.
 """
 
 import numpy as np
+#import numpy.random
 import matplotlib.pyplot as plt
 import math
 import networkx as nx
@@ -226,94 +227,210 @@ class DynamicSystem:
     graph=property(_get_Graph)
     
         
+#    def _ResolutionOrder(self):
+#        """
+#        Finds the blocks resolution order. Should not be used by end-user
+#        """
+#        known_variables=self.signals[:]
+#        resolution_order=[]
+#        half_known_variables=[]
+#        half_solved_blocks={}
+#        unsolved_blocks=self.blocks[:]
+#        graph_loops=list(nx.simple_cycles(self.graph))
+##        print(graph_loops)
+#        while len(known_variables)<(len(self.variables)+len(self.signals)):
+#            block_solved=False
+#            # Check if a block out of remaining is solvable
+#            # ie if all inputs are known of half known
+#            for block in unsolved_blocks:
+#                solved_input_variables=[]
+#                half_solved_input_variables=[]
+#                unsolved_input_variables=[]
+#                for variable in block.inputs:
+#                    if variable in known_variables:
+#                        solved_input_variables.append(variable)
+#                    elif variable in half_known_variables:
+#                        half_solved_input_variables.append(variable)
+#                    else:
+#                        unsolved_input_variables.append(variable)
+#                        
+#                
+#                if unsolved_input_variables==[]:
+#                    if solved_input_variables!=[]:
+#                        resolution_order.append(block)
+#                        unsolved_blocks.remove(block)
+#                        block_solved=True
+#                        for variable in block.outputs:
+#                            if not variable in known_variables:
+#                                known_variables.append(variable)
+#                        break
+#            if not block_solved:
+#                # A block with inputs partially can half solve its outputs
+#                
+#                # Each block is assigned a score
+#                # defined by the ratio of already knowns variables
+#                scores={}
+#                for block in unsolved_blocks:
+#                    score=0
+#                    # counting variables
+#                    for variable in block.inputs:
+#                        if variable in known_variables:
+#                            score+=4# helps propagating information
+#                        elif variable in half_known_variables:
+#                            score+=0.5
+#                        else:
+#                            # Variable not even half known.
+#                            # It has to be part of a loop to be solve                        
+#                            in_loop=False
+#                            for loop in graph_loops:
+#                                if (block in loop)&(variable in loop):
+#                                    in_loop=True
+#                            if not in_loop:
+#                                score=0
+#                                break
+#                    try:
+#                        max_score_block=half_solved_blocks[block]                                        
+#                    except:
+#                        max_score_block=0
+#                    if score>max_score_block:
+#                        scores[block]=score
+#                if scores!={}:
+#                    max_score=0
+#                    for block,score in scores.items():
+#                        if score>max_score:
+#                            max_score=score
+#                            max_block=block
+#                            
+#                    # Half solve block
+#                    resolution_order.append(max_block)
+#                    half_solved_blocks[max_block]=max_score
+#                    for variable in max_block.outputs:
+#                        if not variable in known_variables+half_known_variables:
+#                            half_known_variables.append(variable)
+#
+#                else:
+#                    raise NotImplementedError
+#                    
+#                             
+#        return resolution_order 
+        
+
+#    def _ResolutionOrder(self,tolerance=0.999,max_iter=1000):
+#        resolution_order=[]
+#        variable_scores={}
+#        for variable in self.variables:
+#            variable_scores[variable]=0
+#        for signal in self.signals:
+#            variable_scores[signal]=1
+#        first_solve={}
+#
+#        n_iter=0
+#        while(min(variable_scores.values())<tolerance)&(n_iter<max_iter):
+#            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
+##            print(scores,np.argmax(scores))
+#            block=self.blocks[np.argmax(scores)]
+#            # updating  variables scores
+#            mean_inputs=np.mean([variable_scores[var] for var in block.inputs])
+##            print(block,mean_inputs)
+#            for variable in block.outputs:
+#                variable_scores[variable]=mean_inputs
+#            try:
+#                first_solve[block]
+#                resolution_order.append((block,True))
+#            except KeyError:                
+#                resolution_order.append((block,False))
+#                first_solve[block]=True
+##            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
+##            print(block)
+##            print(min(variable_scores.values()))
+##            print(variable_scores)
+#            n_iter+=1
+#        return resolution_order
+#
+#    def _ResolutionOrder2(self,tolerance=0.999,max_iter=1000):
+#        """
+#        Returns 2 lists: 
+#         * one of blocks that would solve completely their outputs
+#         * one of blocks with ouputs partially solved
+#        """
+#        resolution_order=[]
+#        variable_scores={}
+#        for variable in self.variables:
+#            variable_scores[variable]=0
+#        for signal in self.signals:
+#            variable_scores[signal]=1
+#        first_solve={}
+#
+#        n_iter=0
+#        while(min(variable_scores.values())<tolerance)&(n_iter<max_iter):
+#            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
+##            print(scores,np.argmax(scores))
+#            block=self.blocks[np.argmax(scores)]
+#            # updating  variables scores
+#            mean_inputs=np.mean([variable_scores[var] for var in block.inputs])
+##            print(block,mean_inputs)
+#            for variable in block.outputs:
+#                variable_scores[variable]=mean_inputs
+#            try:
+#                first_solve[block]
+#                resolution_order.append((block,True))
+#            except KeyError:                
+#                resolution_order.append((block,False))
+#                first_solve[block]=True
+##            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
+##            print(block)
+##            print(min(variable_scores.values()))
+##            print(variable_scores)
+#            n_iter+=1
+#        return resolution_order
+        
     def _ResolutionOrder(self):
         """
-        Finds the blocks resolution order. Should not be used by end-user
+        returns 2 list:
+         * one of blocks that would solve completely their outputs
+         * one of loops(list of blocks)
         """
-        known_variables=self.signals[:]
-        resolution_order=[]
-        half_known_variables=[]
-        half_solved_blocks={}
-        unsolved_blocks=self.blocks[:]
-        graph_loops=list(nx.simple_cycles(self.graph))
-#        print(graph_loops)
-        while len(known_variables)<(len(self.variables)+len(self.signals)):
-            block_solved=False
-            # Check if a block out of remaining is solvable
-            # ie if all inputs are known of half known
-            for block in unsolved_blocks:
-                solved_input_variables=[]
-                half_solved_input_variables=[]
-                unsolved_input_variables=[]
+        solved=[]
+        loops=[]
+        
+        # Finding completely solved variables
+        solved_variables={}
+        for signal in self.signals:
+            solved_variables[signal]=True
+        for variable in self.variables:
+            solved_variables[variable]=False            
+            
+        nsv=True# new solved  variables
+        blocks=self.blocks[:]
+        while nsv:
+            nsv=False
+            for block in blocks:
+                solvable=True
                 for variable in block.inputs:
-                    if variable in known_variables:
-                        solved_input_variables.append(variable)
-                    elif variable in half_known_variables:
-                        half_solved_input_variables.append(variable)
-                    else:
-                        unsolved_input_variables.append(variable)
+                    if not solved_variables[variable]:
+                        solvable=False
+                        break
+                if solvable:
+                    nsv=True
+                    for variable in block.outputs:
+                        solved_variables[variable]=True
+                    blocks.remove(block)
+        
+        for variable,solved_var in solved_variables.items():
+            if solved_var:
+                solved.append(variable)
+                
+        # loops
+        
+        for loop in nx.simple_cycles(self.graph):
+            # Find a solved variable for beginning
+            for ie,element in enumerate(loop):
+                try:
+                    if solved_variables[element]:
+                        loop2=
+                        loops.append(loop2[1::2])
                         
                 
-                if unsolved_input_variables==[]:
-                    if solved_input_variables!=[]:
-                        resolution_order.append(block)
-                        unsolved_blocks.remove(block)
-                        block_solved=True
-                        for variable in block.outputs:
-                            if not variable in known_variables:
-                                known_variables.append(variable)
-                        break
-            if not block_solved:
-                # A block with inputs partially can half solve its outputs
-                
-                # Each block is assigned a score
-                # defined by the ratio of already knowns variables
-                scores={}
-                for block in unsolved_blocks:
-                    score=0
-                    # counting variables
-                    for variable in block.inputs:
-                        if variable in known_variables:
-                            score+=2# helps propagating information
-                        elif variable in half_known_variables:
-                            score+=0.5
-                        else:
-                            # Variable not even half known.
-                            # It has to be part of a loop to be solve                        
-                            in_loop=False
-                            for loop in graph_loops:
-                                if (block in loop)&(variable in loop):
-                                    in_loop=True
-                            if not in_loop:
-                                score=0
-                                break
-                    try:
-                        max_score_block=half_solved_blocks[block]                                        
-                    except:
-                        max_score_block=0
-                    if score>max_score_block:
-                        scores[block]=score
-                if scores!={}:
-                    max_score=0
-                    for block,score in scores.items():
-                        if score>max_score:
-                            max_score=score
-                            max_block=block
-                            
-                    # Half solve block
-                    resolution_order.append(max_block)
-                    half_solved_blocks[max_block]=max_score
-                    for variable in max_block.outputs:
-                        if not variable in known_variables+half_known_variables:
-                            half_known_variables.append(variable)
-
-                else:
-                    raise NotImplementedError
-                    
-                             
-        return resolution_order 
-        
-        
         
     def CheckModelConsistency(self):
         """
@@ -329,7 +446,7 @@ class DynamicSystem:
             if len(self.graph.predecessors(variable))>1:
                 raise ModelError
                             
-    def Simulate(self):
+    def Simulate(self,alpha=0.5):
         self.CheckModelConsistency()
         resolution_order=self._ResolutionOrder()
         # Initialisation of variables values
@@ -340,10 +457,10 @@ class DynamicSystem:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           
 #            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
-            for block in resolution_order:
+            for block,first_solve in resolution_order:
 #                print('write @ ',it+self.max_order)
-                block.Solve(it+self.max_order+1,self.ts)
-#                print(block)
+                print(block)                
+                block.Solve(it+self.max_order+1,self.ts,first_solve,alpha)
 
     def VariablesValues(self,variables,t): 
         """
@@ -492,9 +609,10 @@ class PhysicalSystem:
                     if node==node_block:
                         G.add_edge(node,block.variables[inb])
                         
-        pos=nx.spring_layout(G)
-        nx.draw(G,pos) 
-        nx.draw_networkx_labels(G,pos)
+#        pos=nx.spring_layout(G)
+#        nx.draw(G,pos) 
+#        nx.draw_networkx_labels(G,pos)
+                        
 #        import matplotlib.pyplot as plt
 #        plt.figure()
         G2=nx.DiGraph()

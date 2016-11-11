@@ -4,7 +4,7 @@
 """
 
 from bms import PhysicalNode,PhysicalBlock,Variable,np
-from bms.blocks.continuous import Sum,Gain,Subtraction,ODE
+from bms.blocks.continuous import Sum,Gain,Subtraction,ODE,WeightedSum
 from bms.signals.functions import Step
 
 class ElectricalNode(PhysicalNode):
@@ -27,24 +27,27 @@ class Resistor(PhysicalBlock):
             if variable==self.nodes[0].variable:
                 # U1 is output
                 # U1=R(i1)+U2
-                Ur=Variable(hidden=True)
-                block1=Gain(self.variables[0],Ur,self.R)
-                sum1=Sum([self.nodes[1].variable,Ur],variable)
-                return [block1,sum1]
+#                Ur=Variable(hidden=True)
+#                block1=Gain(self.variables[0],Ur,self.R)
+#                sum1=Sum([self.nodes[1].variable,Ur],variable)
+#                return [block1,sum1]
+                return [WeightedSum([self.nodes[1].variable,self.variables[0]],variable,[1,self.R])]
             elif variable==self.nodes[1].variable:
                 # U2 is output
                 # U2=-R(i1)+U2
-                Ur=Variable(hidden=True)
-                block1=Gain(self.variables[0],Ur,-self.R)
-                sum1=Sum([self.nodes[0].variable,Ur],variable)
-                return [block1,sum1]
+#                Ur=Variable(hidden=True)
+#                block1=Gain(self.variables[0],Ur,-self.R)
+#                sum1=Sum([self.nodes[0].variable,Ur],variable)
+#                return [block1,sum1]
+                return [WeightedSum([self.nodes[0].variable,self.variables[0]],variable,[1,-self.R])]
             elif variable==self.variables[0]:
                 # i1 is output
                 # i1=(U1-U2)/R
-                ir=Variable(hidden=True)
-                subs1=Subtraction(self.nodes[0].variable,self.nodes[1].variable,ir)
-                block1=Gain(ir,variable,1/self.R)
-                return [block1,subs1]
+#                ir=Variable(hidden=True)
+#                subs1=Subtraction(self.nodes[0].variable,self.nodes[1].variable,ir)
+#                block1=Gain(ir,variable,1/self.R)
+#                return [block1,subs1]
+                return [WeightedSum([self.nodes[0].variable,self.nodes[1].variable],variable,[1/self.R,-1/self.R])]
         elif ieq==1:
             # i1=-i2
             if variable==self.variables[0]:
@@ -105,14 +108,14 @@ class Capacitor(PhysicalBlock):
             # U1-U2=R(i1)
             if variable==self.nodes[0].variable:
                 # U1 is output
-                # U1=U2-
+                # U1=U2+Ri1
                 Uc=Variable(hidden=True)
                 block1=ODE(self.variables[0],Uc,[1],[0,self.C])
                 sub1=Subtraction(self.nodes[1].variable,Uc,variable)
                 return [block1,sub1]
             elif variable==self.nodes[1].variable:
                 # U2 is output
-                # U2=-R(i1)+U
+                # U2=-R(i1)+U1
                 Uc=Variable(hidden=True)
                 block1=ODE(self.variables[0],Uc,[1],[0,self.C])
                 sum1=Sum([self.nodes[0].variable,Uc],variable)

@@ -16,7 +16,7 @@ from bms.signals.functions import Sinus
 
 U=Sinus('Generator',4,5)# Voltage of generator
 R1=200# Resistance in Ohm
-R2=100# Resistance in Ohm
+R2=200# Resistance in Ohm
 
 n1=ElectricalNode('1')
 n2=ElectricalNode('2')
@@ -29,6 +29,7 @@ Res2=Resistor(n2,n3,R2)
 ps=bms.PhysicalSystem(4,200,[Gen,Res1,Res2])
 ds=ps.dynamic_system
 
+#ds._ResolutionOrder2()
 ds.Simulate()
 ds.PlotVariables([[U,n1.variable,n2.variable,n3.variable],[Res1.variables[0],Res2.variables[0]]])
 

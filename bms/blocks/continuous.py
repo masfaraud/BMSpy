@@ -54,8 +54,19 @@ class WeightedSum(Block):
         Block.__init__(self,inputs,[output_variable],1,0)
         self.weights=weights
         
-    def Solve(self,it,ts):
-        self.outputs[0]._values[it]=np.dot(self.weights,self.InputValues(it))
+    def Solve(self,it,ts,first_solve,alpha):
+#        print(self.weights)
+#        print(self.InputValues(it))
+        print('#########',ts)
+        print([i.name for i in self.inputs],self.InputValues(it))
+#        print(self.outputs[0].name,np.dot(self.weights,self.InputValues(it)))
+        if first_solve:
+            print(self.outputs[0].name,np.dot(self.weights,self.InputValues(it)))
+            self.outputs[0]._values[it]=np.dot(self.weights,self.InputValues(it))
+        else:
+            print(self.outputs[0].name,(np.dot(self.weights,self.InputValues(it))+self.outputs[0]._values[it])*0.5)
+            self.outputs[0]._values[it]=((1-alpha)*np.dot(self.weights,self.InputValues(it))+alpha*self.outputs[0]._values[it])
+            
 
     def LabelBlock(self):
         return 'W+'
