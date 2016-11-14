@@ -25,11 +25,11 @@ Gen=GeneratorGround(n3,n1,U)
 Res=Resistor(n1,n2,R)
 Cap=Capacitor(n2,n3,C)
 
-ps=bms.PhysicalSystem(4,200,[Gen,Res,Cap])
+ps=bms.PhysicalSystem(4,400,[Gen,Res,Cap])
 ds=ps.dynamic_system
 
 #ds._ResolutionOrder3()
-ds.Simulate()
+d=ds.Simulate()
 ds.PlotVariables([[U,n1.variable,n2.variable,n3.variable],[Res.variables[0],Cap.variables[0]]])
 
 # Validation: analytical solutions

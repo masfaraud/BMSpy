@@ -55,11 +55,17 @@ block9=ODE(T,W,[1],[0,J])
 block10=Gain(W,e,k) 
 block11=Product(Um,Iind,Pe)
 block11a=Product(Tm,W,Pm)
-ds=bms.DynamicSystem(10,2000,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
+ds=bms.DynamicSystem(10,1000,[block1,block2,block3,block4,block4a,block5,block6,block7,block8,block8a,block9,block10,block11,block11a])
 
 
 #ds.DrawModel()
 ds.Simulate()
+r,l=ds._ResolutionOrder()
+#print(r)
+#for li in l:
+#    print('==========')
+#    for b in li:
+#        print(b)
 ds.PlotVariables([[Wc,W,dW],[Tm,Text,T],])
 ds.PlotVariables([[Um,e,Uind],[Pe,Pm],[Iind]])
 

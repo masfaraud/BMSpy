@@ -110,14 +110,14 @@ class Capacitor(PhysicalBlock):
                 # U1 is output
                 # U1=U2+Ri1
                 Uc=Variable(hidden=True)
-                block1=ODE(self.variables[0],Uc,[1],[0,self.C])
+                block1=ODE(self.variables[0],Uc,[-1],[0,self.C])
                 sub1=Subtraction(self.nodes[1].variable,Uc,variable)
                 return [block1,sub1]
             elif variable==self.nodes[1].variable:
                 # U2 is output
                 # U2=-R(i1)+U1
                 Uc=Variable(hidden=True)
-                block1=ODE(self.variables[0],Uc,[1],[0,self.C])
+                block1=ODE(self.variables[0],Uc,[-1],[0,self.C])
                 sum1=Sum([self.nodes[0].variable,Uc],variable)
                 return [block1,sum1]
             elif variable==self.variables[0]:
@@ -125,7 +125,7 @@ class Capacitor(PhysicalBlock):
                 # i1=(U1-U2)/R
                 ic=Variable(hidden=True)
                 subs1=Subtraction(self.nodes[0].variable,self.nodes[1].variable,ic)
-                block1=ODE(ic,variable,[0,self.C],[1])
+                block1=ODE(ic,variable,[0,self.C],[-1])
                 return [block1,subs1]
         elif ieq==1:
             # i1=-i2

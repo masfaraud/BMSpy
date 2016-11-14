@@ -126,25 +126,33 @@ class Block:
         else:
             raise TypeError
 
-    def InputValues(self,it):
+    def InputValues(self,it,nsteps=None):
         """
             Returns the input values at a given iteration for solving the block outputs
         """
+        if nsteps==None:
+            nsteps=self.max_input_order
 #        print(self,it)
         # Provides values in inputs values for computing at iteration it
-        I=np.zeros((self.n_inputs,self.max_input_order))
+        I=np.zeros((self.n_inputs,nsteps))
         for iv,variable in enumerate(self.inputs):
 #            print(it-self.max_input_order+1,it+1)            
 #            print(variable._values[it-self.max_input_order+1:it+1])
-            I[iv,:]=variable._values[it-self.max_input_order+1:it+1]
+            I[iv,:]=variable._values[it-nsteps+1:it+1]
         return I
             
-    def OutputValues(self,it):
+    def OutputValues(self,it,nsteps=None):
         # Provides values in inputs values for computing at iteration it
-        O=np.zeros((self.n_outputs,self.max_output_order))
+        if nsteps==None:
+            nsteps=self.max_output_order
+        O=np.zeros((self.n_outputs,nsteps))
         for iv,variable in enumerate(self.outputs):
-            O[iv,:]=variable._values[it-self.max_output_order:it]
+            O[iv,:]=variable._values[it-nsteps:it]
         return O
+        
+    def WriteNewValue(self,new_value,it,alpha):
+#        print('wnv:',self.outputs[0]._values[it]-new_value,'@',it)
+        self.outputs[0]._values[it]=(1-alpha)*new_value+alpha*self.outputs[0]._values[it]
 
 class ModelError(Exception):
     def __init__(self):
@@ -415,22 +423,36 @@ class DynamicSystem:
                     for variable in block.outputs:
                         solved_variables[variable]=True
                     blocks.remove(block)
+                    solved.append(block)
         
-        for variable,solved_var in solved_variables.items():
-            if solved_var:
-                solved.append(variable)
+#        for variable,solved_var in solved_variables.items():
+#            if solved_var:
+#                solved.append(variable)
                 
         # loops
         
         for loop in nx.simple_cycles(self.graph):
+            print('i')
             # Find a solved variable for beginning
+            loop_element_solved=False
             for ie,element in enumerate(loop):
                 try:
                     if solved_variables[element]:
-                        loop2=
+                        loop2=loop[ie:]+loop[:ie]
                         loops.append(loop2[1::2])
-                        
-                
+                        loop_element_solved=True
+                        break
+            
+                except:
+                    # element in a block
+                    pass
+            if not loop_element_solved:
+                if loop[0].__class__.__name__=='Variable':
+                    loops.append(loop[1::2])
+                else:
+                    loops.append(loop[0::2])
+                    
+        return solved,loops
         
     def CheckModelConsistency(self):
         """
@@ -441,14 +463,17 @@ class DynamicSystem:
         """
         for variable in self.signals:
             if self.graph.predecessors(variable)!=[]:
+                print('The variable '+variable.name+' is free!')
                 raise ModelError
         for variable in self.variables:
             if len(self.graph.predecessors(variable))>1:
+                print('The variable '+variable.name+' has two block solving it!')                
                 raise ModelError
                             
-    def Simulate(self,alpha=0.5):
+    def Simulate(self,alpha=0.2,conv_crit=0.03,max_iter=100):
         self.CheckModelConsistency()
-        resolution_order=self._ResolutionOrder()
+        solved_blocks,loops=self._ResolutionOrder()
+        d=[]
         # Initialisation of variables values
         for variable in self.variables+self.signals:
 #            if not isinstance(variable,Input):
@@ -457,10 +482,42 @@ class DynamicSystem:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           
 #            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
-            for block,first_solve in resolution_order:
+            for block in solved_blocks:
 #                print('write @ ',it+self.max_order)
-                print(block)                
-                block.Solve(it+self.max_order+1,self.ts,first_solve,alpha)
+#                print(block)                
+                block.Solve(it+self.max_order+1,self.ts,alpha=0.)
+            
+#            conv=0.
+            unconv_loops=list(range(len(loops)))
+            niter=0
+            while len(unconv_loops)>0:
+#                print(len(unconv_loops))
+                for il in unconv_loops:
+                    conv_l=0.
+                    for block in loops[il]:
+                        outputs1=block.OutputValues(it+self.max_order+2,1)
+#                        print(outputs1)
+#                        print(block.outputs[0].values)
+                        block.Solve(it+self.max_order+1,self.ts,alpha)                        
+                        outputs2=block.OutputValues(it+self.max_order+2,1)
+#                        print(outputs2)
+#                        print(block.outputs[0].values)
+                        convb=np.min(np.abs((outputs2-outputs1)/outputs1))
+#                        print(outputs1,outputs2,convb)
+                        conv_l=max(convb,conv_l)
+                    d.append(conv_l)
+#                        print('convl',conv_l)
+                    if conv_l<conv_crit:
+                        unconv_loops.remove(il)
+                        break
+#                    print(il,conv_l)
+                niter+=1    
+                if niter>max_iter:
+                    break
+                
+        return d
+                    
+                
 
     def VariablesValues(self,variables,t): 
         """
