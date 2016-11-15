@@ -150,9 +150,12 @@ class Block:
             O[iv,:]=variable._values[it-nsteps:it]
         return O
         
-    def WriteNewValue(self,new_value,it,alpha):
-#        print('wnv:',self.outputs[0]._values[it]-new_value,'@',it)
-        self.outputs[0]._values[it]=(1-alpha)*new_value+alpha*self.outputs[0]._values[it]
+#    def WriteNewValue(self,new_value,it,alpha):
+##        print('wnv:',self.outputs[0]._values[it]-new_value,'@',it)
+#        self.outputs[0]._values[it]=(1-alpha)*new_value+alpha*self.outputs[0]._values[it]
+        
+    def Solve(self,it,ts,alpha):
+        self.outputs[0]._values[it]=(1-alpha)*self.Evaluate(it,ts)+alpha*self.outputs[0]._values[it]
 
 class ModelError(Exception):
     def __init__(self):
@@ -470,7 +473,7 @@ class DynamicSystem:
                 print('The variable '+variable.name+' has two block solving it!')                
                 raise ModelError
                             
-    def Simulate(self,alpha=0.2,conv_crit=0.03,max_iter=100):
+    def Simulate(self,alpha=0.2,conv_crit=0.01,max_iter=100):
         self.CheckModelConsistency()
         solved_blocks,loops=self._ResolutionOrder()
         d=[]

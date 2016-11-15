@@ -14,7 +14,7 @@ class DeadZone(Block):
         Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)
         self.zone_width=zone_width
 
-    def Solve(self,it,ts):
+    def Evaluate(self,it,ts):
         input_value=self.InputValues(it)[0]
         if value<-0.5*self.zone_width:
             output=value+0.5*self.zone_width
@@ -34,7 +34,7 @@ class Hysteresis(Block):
         self.zone_width=zone_width
         self.value=initial_value
 
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
         input_value=self.InputValues(it)[0]
         if self.value>input_value+0.5*self.zone_width:
             output=input_value+0.5*self.zone_width
@@ -42,7 +42,7 @@ class Hysteresis(Block):
         elif self.value<input_value-0.5*self.zone_width:
             output=input_value-0.5*self.zone_width
             self.value=output
-        self.WriteNewValue(output,it,alpha)
+        return output
 
     
 #class Delay(Block):
@@ -50,7 +50,7 @@ class Hysteresis(Block):
 #        Block.__init__(self,[input_variable],[output_variable],1,0)
 #        self.delay=delay
 #
-#    def Solve(self,it,ts):
+#    def Evaluate(self,it,ts):
 #        value1,value2=self.InputValues(it)
 #        self.outputs[0]._values[it]=value1/value2
 #
@@ -69,13 +69,13 @@ class Saturation(Block):
         self.min_value=min_value
         self.max_value=max_value
 
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
         value=self.InputValues(it)[0]
         if value<self.min_value:
             value=self.min_value
         elif value>self.max_value:
             value=self.max_value
-        self.WriteNewValue(value,it,alpha)
+        return value
         
     def LabelBlock(self):
         return 'Sat'
@@ -91,7 +91,7 @@ class Coulomb(Block):
         self.max_value=max_value
         self.tolerance=tolerance
 
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
         input_value,speed=self.InputValues(it)
         if speed>self.tolerance:
             output=-self.max_value
@@ -103,7 +103,7 @@ class Coulomb(Block):
             else:
                 output=self.max_value
 #        print(input_value,speed,output)
-        self.WriteNewValue(output,it,alpha)
+        return output
         
     def LabelBlock(self):
         return 'Clb'

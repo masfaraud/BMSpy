@@ -17,8 +17,8 @@ class Gain(Block):
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.value=value
 
-    def Solve(self,it,ts,alpha):
-        self.WriteNewValue(self.value*self.InputValues(it)[0],it,alpha)
+    def Evaluate(self,it,ts):
+        return self.value*self.InputValues(it)[0]
 
     def LabelBlock(self):
         return str(self.value)
@@ -35,8 +35,8 @@ class Sum(Block):
         print(len(inputs),[i.name for i in inputs])
         Block.__init__(self,inputs,[output_variable],1,0)
         
-    def Solve(self,it,ts,alpha):
-        self.WriteNewValue(np.sum(self.InputValues(it)),it,alpha)
+    def Evaluate(self,it,ts):
+        return np.sum(self.InputValues(it))
         
     def LabelBlock(self):
         return '+'
@@ -54,14 +54,15 @@ class WeightedSum(Block):
         Block.__init__(self,inputs,[output_variable],1,0)
         self.weights=weights
         
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
+
 #        print(self.weights)
 #        print(self.InputValues(it))
 #        print('#########',ts)
 #        print([i.name for i in self.inputs],self.InputValues(it))
 #        print(self.outputs[0].name,np.dot(self.weights,self.InputValues(it)))
         value=np.dot(self.weights,self.InputValues(it))
-        self.WriteNewValue(value,it,alpha)
+        return value
 
     def LabelBlock(self):
         return 'W+'
@@ -76,8 +77,8 @@ class Subtraction(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
-    def Solve(self,it,ts,alpha):
-        self.WriteNewValue(np.dot(np.array([1,-1]),self.InputValues(it)),it,alpha)   
+    def Evaluate(self,it,ts):
+        return np.dot(np.array([1,-1]),self.InputValues(it))  
         
     def LabelBlock(self):
         return '-'
@@ -94,9 +95,9 @@ class Product(Block):
 
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
         value1,value2=self.InputValues(it)
-        self.WriteNewValue(value1*value2,it,alpha)
+        return value1*value2
 
     def LabelBlock(self):
         return 'x'
@@ -112,9 +113,10 @@ class Division(Block):
 
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
+
         value1,value2=self.InputValues(it)
-        self.WriteNewValue(value1/value2,it,alpha)
+        return value1/value2
 
     def LabelBlock(self):
         return '/'
@@ -167,10 +169,11 @@ class ODE(Block):
             self._M[delta_t]=(Mi,Mo)
         return Mi,Mo
         
-    def Solve(self,it,ts,alpha):
+    def Evaluate(self,it,ts):
+
         Mi,Mo=self.OutputMatrices(ts)
         # Solve at time t with time step ts
-        self.WriteNewValue(np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T),it,alpha)
+        return np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T)
 
     def LabelBlock(self):
         return str(self.a)+'\n'+str(self.b)
@@ -188,8 +191,8 @@ class FunctionBlock(Block):
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.function=function
 
-    def Solve(self,it,ts,alpha):
-        self.WriteNewValue(self.function(self.InputValues(it)[0]),it,alpha)
+    def Evaluate(self,it,ts):
+        return self.function(self.InputValues(it)[0])
 
     def LabelBlock(self):
         return 'f(t)'
@@ -206,7 +209,7 @@ class FunctionBlock(Block):
 #        Block.__init__(self,[input_variable],[output_variable],1,0)
 #        self.function=function
 #
-#    def Solve(self,it,ts):
+#    def Evaluate(self,it,ts):
 #        self.outputs[0]._values[it]=self.function(self.InputValues(it)[0])
 #
 #    def Label(self):

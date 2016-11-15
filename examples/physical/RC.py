@@ -14,7 +14,7 @@ from bms.physical.electrical import GeneratorGround,Resistor,ElectricalNode,Capa
 from bms.signals.functions import Sinus
 
 U=Sinus('Generator',2,5)# Voltage of generator
-R=100# Resistance in Ohm
+R=10# Resistance in Ohm
 C=0.01# Capacitance in Fahrads
 
 n1=ElectricalNode('1')
