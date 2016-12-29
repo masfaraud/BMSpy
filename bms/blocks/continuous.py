@@ -6,8 +6,8 @@ Collection of continuous blocks
 
 
 #from ..blocks import Block
-from bms import Block,np,math
-
+from bms import Block,np
+import math
 
 class Gain(Block):
     """

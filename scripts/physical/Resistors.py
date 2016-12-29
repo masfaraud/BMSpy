@@ -16,7 +16,7 @@ from bms.signals.functions import Sinus
 
 U=Sinus('Generator',4,5)# Voltage of generator
 R1=200# Resistance in Ohm
-R2=400# Resistance in Ohm
+R2=200# Resistance in Ohm
 
 n1=ElectricalNode('1')
 n2=ElectricalNode('2')

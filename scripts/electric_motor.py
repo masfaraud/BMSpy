@@ -60,12 +60,8 @@ ds=bms.DynamicSystem(10,1000,[block1,block2,block3,block4,block4a,block5,block6,
 
 #ds.DrawModel()
 ds.Simulate()
-r,l=ds._ResolutionOrder()
-#print(r)
-#for li in l:
-#    print('==========')
-#    for b in li:
-#        print(b)
+#bb,l,ba=ds._ResolutionOrder()
+#print(ba)
 ds.PlotVariables([[Wc,W,dW],[Tm,Text,T],])
 ds.PlotVariables([[Um,e,Uind],[Pe,Pm],[Iind]])
 

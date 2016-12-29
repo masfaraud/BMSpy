@@ -25,7 +25,7 @@ Gen=GeneratorGround(n3,n1,U)
 Res=Resistor(n1,n2,R)
 Cap=Capacitor(n2,n3,C)
 
-ps=bms.PhysicalSystem(4,400,[Gen,Res,Cap])
+ps=bms.PhysicalSystem(4,100,[Gen,Res,Cap])
 ds=ps.dynamic_system
 
 #ds._ResolutionOrder3()

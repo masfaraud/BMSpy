@@ -9,7 +9,7 @@ This file defines the base of BMS.
 import numpy as np
 #import numpy.random
 import matplotlib.pyplot as plt
-import math
+#import math
 import networkx as nx
 import dill
 
@@ -238,162 +238,6 @@ class DynamicSystem:
     graph=property(_get_Graph)
     
         
-#    def _ResolutionOrder(self):
-#        """
-#        Finds the blocks resolution order. Should not be used by end-user
-#        """
-#        known_variables=self.signals[:]
-#        resolution_order=[]
-#        half_known_variables=[]
-#        half_solved_blocks={}
-#        unsolved_blocks=self.blocks[:]
-#        graph_loops=list(nx.simple_cycles(self.graph))
-##        print(graph_loops)
-#        while len(known_variables)<(len(self.variables)+len(self.signals)):
-#            block_solved=False
-#            # Check if a block out of remaining is solvable
-#            # ie if all inputs are known of half known
-#            for block in unsolved_blocks:
-#                solved_input_variables=[]
-#                half_solved_input_variables=[]
-#                unsolved_input_variables=[]
-#                for variable in block.inputs:
-#                    if variable in known_variables:
-#                        solved_input_variables.append(variable)
-#                    elif variable in half_known_variables:
-#                        half_solved_input_variables.append(variable)
-#                    else:
-#                        unsolved_input_variables.append(variable)
-#                        
-#                
-#                if unsolved_input_variables==[]:
-#                    if solved_input_variables!=[]:
-#                        resolution_order.append(block)
-#                        unsolved_blocks.remove(block)
-#                        block_solved=True
-#                        for variable in block.outputs:
-#                            if not variable in known_variables:
-#                                known_variables.append(variable)
-#                        break
-#            if not block_solved:
-#                # A block with inputs partially can half solve its outputs
-#                
-#                # Each block is assigned a score
-#                # defined by the ratio of already knowns variables
-#                scores={}
-#                for block in unsolved_blocks:
-#                    score=0
-#                    # counting variables
-#                    for variable in block.inputs:
-#                        if variable in known_variables:
-#                            score+=4# helps propagating information
-#                        elif variable in half_known_variables:
-#                            score+=0.5
-#                        else:
-#                            # Variable not even half known.
-#                            # It has to be part of a loop to be solve                        
-#                            in_loop=False
-#                            for loop in graph_loops:
-#                                if (block in loop)&(variable in loop):
-#                                    in_loop=True
-#                            if not in_loop:
-#                                score=0
-#                                break
-#                    try:
-#                        max_score_block=half_solved_blocks[block]                                        
-#                    except:
-#                        max_score_block=0
-#                    if score>max_score_block:
-#                        scores[block]=score
-#                if scores!={}:
-#                    max_score=0
-#                    for block,score in scores.items():
-#                        if score>max_score:
-#                            max_score=score
-#                            max_block=block
-#                            
-#                    # Half solve block
-#                    resolution_order.append(max_block)
-#                    half_solved_blocks[max_block]=max_score
-#                    for variable in max_block.outputs:
-#                        if not variable in known_variables+half_known_variables:
-#                            half_known_variables.append(variable)
-#
-#                else:
-#                    raise NotImplementedError
-#                    
-#                             
-#        return resolution_order 
-        
-
-#    def _ResolutionOrder(self,tolerance=0.999,max_iter=1000):
-#        resolution_order=[]
-#        variable_scores={}
-#        for variable in self.variables:
-#            variable_scores[variable]=0
-#        for signal in self.signals:
-#            variable_scores[signal]=1
-#        first_solve={}
-#
-#        n_iter=0
-#        while(min(variable_scores.values())<tolerance)&(n_iter<max_iter):
-#            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
-##            print(scores,np.argmax(scores))
-#            block=self.blocks[np.argmax(scores)]
-#            # updating  variables scores
-#            mean_inputs=np.mean([variable_scores[var] for var in block.inputs])
-##            print(block,mean_inputs)
-#            for variable in block.outputs:
-#                variable_scores[variable]=mean_inputs
-#            try:
-#                first_solve[block]
-#                resolution_order.append((block,True))
-#            except KeyError:                
-#                resolution_order.append((block,False))
-#                first_solve[block]=True
-##            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
-##            print(block)
-##            print(min(variable_scores.values()))
-##            print(variable_scores)
-#            n_iter+=1
-#        return resolution_order
-#
-#    def _ResolutionOrder2(self,tolerance=0.999,max_iter=1000):
-#        """
-#        Returns 2 lists: 
-#         * one of blocks that would solve completely their outputs
-#         * one of blocks with ouputs partially solved
-#        """
-#        resolution_order=[]
-#        variable_scores={}
-#        for variable in self.variables:
-#            variable_scores[variable]=0
-#        for signal in self.signals:
-#            variable_scores[signal]=1
-#        first_solve={}
-#
-#        n_iter=0
-#        while(min(variable_scores.values())<tolerance)&(n_iter<max_iter):
-#            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
-##            print(scores,np.argmax(scores))
-#            block=self.blocks[np.argmax(scores)]
-#            # updating  variables scores
-#            mean_inputs=np.mean([variable_scores[var] for var in block.inputs])
-##            print(block,mean_inputs)
-#            for variable in block.outputs:
-#                variable_scores[variable]=mean_inputs
-#            try:
-#                first_solve[block]
-#                resolution_order.append((block,True))
-#            except KeyError:                
-#                resolution_order.append((block,False))
-#                first_solve[block]=True
-##            scores=[np.mean([variable_scores[var] for var in block.inputs])-np.mean([variable_scores[var] for var in block.outputs]) for block in self.blocks]
-##            print(block)
-##            print(min(variable_scores.values()))
-##            print(variable_scores)
-#            n_iter+=1
-#        return resolution_order
         
     def _ResolutionOrder(self):
         """
@@ -401,8 +245,9 @@ class DynamicSystem:
          * one of blocks that would solve completely their outputs
          * one of loops(list of blocks)
         """
-        solved=[]
-        loops=[]
+        solved_b=[]# solved before loops
+        loops=[] 
+        solved_a=[]# solved after loops
         
         # Finding completely solved variables
         solved_variables={}
@@ -426,17 +271,11 @@ class DynamicSystem:
                     for variable in block.outputs:
                         solved_variables[variable]=True
                     blocks.remove(block)
-                    solved.append(block)
+                    solved_b.append(block)
         
-#        for variable,solved_var in solved_variables.items():
-#            if solved_var:
-#                solved.append(variable)
-                
-        # loops
-        
+        # loops        
         for loop in nx.simple_cycles(self.graph):
-            print('i')
-            # Find a solved variable for beginning
+            # Find the most solved variable for beginning
             loop_element_solved=False
             for ie,element in enumerate(loop):
                 try:
@@ -451,11 +290,43 @@ class DynamicSystem:
                     pass
             if not loop_element_solved:
                 if loop[0].__class__.__name__=='Variable':
-                    loops.append(loop[1::2])
+                    blocks_loop=loop[1::2]
                 else:
-                    loops.append(loop[0::2])
+                    blocks_loop=loop[0::2]
+                loops.append(blocks_loop)
                     
-        return solved,loops
+        # delete block in loops
+        for loop in loops:
+            for block in loop:
+                for variable in block.outputs:
+                    solved_variables[variable]=True
+                try:
+                    blocks.remove(block)
+                except ValueError:
+                    pass
+                
+#        print(blocks)
+        nsv=True# new solved  variables
+#        blocks=self.blocks[:]
+        while nsv:
+            nsv=False
+            for block in blocks:
+#                print(block)
+                solvable=True
+                for variable in block.inputs:
+#                    print('iv: ',variable.name,solved_variables[variable])
+                    if not solved_variables[variable]:
+                        solvable=False
+                        break
+                if solvable:
+                    nsv=True
+                    for variable in block.outputs:
+                        solved_variables[variable]=True
+                    blocks.remove(block)
+                    solved_a.append(block)
+
+                    
+        return solved_b,loops,solved_a
         
     def CheckModelConsistency(self):
         """
@@ -473,9 +344,9 @@ class DynamicSystem:
                 print('The variable '+variable.name+' has two block solving it!')                
                 raise ModelError
                             
-    def Simulate(self,alpha=0.2,conv_crit=0.01,max_iter=100):
+    def Simulate(self,alpha=0.2,conv_crit=0.005,max_iter=200):
         self.CheckModelConsistency()
-        solved_blocks,loops=self._ResolutionOrder()
+        solved_blocks_a,loops,solved_blocks_b=self._ResolutionOrder()
         d=[]
         # Initialisation of variables values
         for variable in self.variables+self.signals:
@@ -485,9 +356,7 @@ class DynamicSystem:
 #                variable.Values(self.ns,self.ts,self.max_order)
         for it,t in enumerate(self.t[1:]):           
 #            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
-            for block in solved_blocks:
-#                print('write @ ',it+self.max_order)
-#                print(block)                
+            for block in solved_blocks_a:     
                 block.Solve(it+self.max_order+1,self.ts,alpha=0.)
             
 #            conv=0.
@@ -517,7 +386,10 @@ class DynamicSystem:
                 niter+=1    
                 if niter>max_iter:
                     break
-                
+            
+            for block in solved_blocks_b:     
+                block.Solve(it+self.max_order+1,self.ts,alpha=0.)
+    
         return d
                     
                 
@@ -655,7 +527,6 @@ class PhysicalSystem:
             for ie in range(ne): 
                 G.add_node((block,ie),bipartite=1)
                 for iv in range(nv):
-#                    print(iv)
                     if block.occurence_matrix[ie,iv]==1:
                         if iv%2==0:
                             G.add_edge((block,ie),block.nodes[iv//2].variable)
@@ -717,7 +588,7 @@ class PhysicalSystem:
 #        print(eq_out_var)
         model_blocks=[]
         for block_node,variable in eq_out_var.items():
-            print(block_node,variable)
+#            print(block_node,variable)
             if type(block_node)==tuple:
                 # Blocks writes an equation
                 model_blocks.extend(block_node[0].PartialDynamicSystem(block_node[1],variable))
@@ -735,7 +606,7 @@ class PhysicalSystem:
                         ValueError
 #                print('v: ',variables,variable)
 #                v1=Variable()
-                print('lv',len(variables))
+#                print('lv',len(variables))
                 model_blocks.append(WeightedSum(variables,variable,[-1]*len(variables)))
 #                model_blocks.append(Gain(v1,variable,-1))
                 
