@@ -9,6 +9,7 @@ Collection of continuous blocks
 from bms import Block,np
 import math
 
+
 class Gain(Block):
     """
         output=value* input    
@@ -49,19 +50,15 @@ class WeightedSum(Block):
         Defines a weighted sum over inputs
         output=\sum w_i * input_i    
     """
-    def __init__(self,inputs,output_variable,weights):
+    def __init__(self,inputs,output_variable,weights,constant=0):
         print(len(inputs),[i.name for i in inputs])
         Block.__init__(self,inputs,[output_variable],1,0)
         self.weights=weights
+        self.constant=constant
         
     def Evaluate(self,it,ts):
 
-#        print(self.weights)
-#        print(self.InputValues(it))
-#        print('#########',ts)
-#        print([i.name for i in self.inputs],self.InputValues(it))
-#        print(self.outputs[0].name,np.dot(self.weights,self.InputValues(it)))
-        value=np.dot(self.weights,self.InputValues(it))
+        value=np.dot(self.weights,self.InputValues(it))+self.constant
         return value
 
     def LabelBlock(self):
@@ -70,6 +67,7 @@ class WeightedSum(Block):
     def LabelConnections(self):
         return []
 
+        
 class Subtraction(Block):
     """
         output=input1-input2    

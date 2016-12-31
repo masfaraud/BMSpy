@@ -40,7 +40,7 @@ class Variable:
     
     def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
-        self._values=np.zeros(ns+max_order+1)
+        self._values=self.initial_values[0]*np.ones(ns+max_order+1)
         self._ForwardValues()
             
     def _ForwardValues(self):
@@ -477,9 +477,10 @@ class PhysicalBlock:
     """
     Abstract class to inherit when coding a physical block
     """
-    def __init__(self,nodes,name):
+    def __init__(self,nodes,occurence_matrix,name):
         self.nodes=nodes
         self.name=name
+        self.occurence_matrix=occurence_matrix
         self.variables=[Variable(node.flux_variable_name+' from '+node.name+' to '+self.name) for node in nodes]
         
 class PhysicalSystem:
