@@ -19,6 +19,7 @@ class Gain(Block):
         self.value=value
 
     def Evaluate(self,it,ts):
+#        print(self.inputs,self.outputs)
         return self.value*self.InputValues(it)[0]
 
     def LabelBlock(self):

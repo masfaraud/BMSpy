@@ -124,6 +124,7 @@ class Block:
         if isinstance(variable,Variable):
             self.outputs.append(variable)
         else:
+            print(variable)
             raise TypeError
 
     def InputValues(self,it,nsteps=None):
@@ -201,6 +202,7 @@ class DynamicSystem:
             for variable in block.inputs+block.outputs:
                 self._AddVariable(variable)
         else:
+            print(block)
             raise TypeError
         self._utd_graph=False
         
@@ -344,7 +346,7 @@ class DynamicSystem:
                 print('The variable '+variable.name+' has two block solving it!')                
                 raise ModelError
                             
-    def Simulate(self,alpha=0.2,conv_crit=0.005,max_iter=200):
+    def Simulate(self,alpha=0.2,conv_crit=0.05,max_iter=10):
         self.CheckModelConsistency()
         solved_blocks_a,loops,solved_blocks_b=self._ResolutionOrder()
         d=[]
@@ -467,7 +469,8 @@ class PhysicalNode:
     """
     Abstract class
     """
-    def __init__(self,node_name,potential_variable_name,flux_variable_name):
+    def __init__(self,potential_in_conservative_law,node_name,potential_variable_name,flux_variable_name):
+        self.potential_in_conservative_law=potential_in_conservative_law
         self.name=node_name
         self.potential_variable_name=potential_variable_name
         self.flux_variable_name=flux_variable_name
@@ -477,99 +480,137 @@ class PhysicalBlock:
     """
     Abstract class to inherit when coding a physical block
     """
-    def __init__(self,nodes,occurence_matrix,name):
-        self.nodes=nodes
+    def __init__(self,physical_nodes,nodes_with_fluxes,occurence_matrix,commands,name):
+        self.physical_nodes=physical_nodes
         self.name=name
+        self.nodes_with_fluxes=nodes_with_fluxes
         self.occurence_matrix=occurence_matrix
-        self.variables=[Variable(node.flux_variable_name+' from '+node.name+' to '+self.name) for node in nodes]
+        self.commands=commands
+        self.variables=[Variable(physical_nodes[inode].flux_variable_name+' from '+physical_nodes[inode].name+' to '+self.name) for inode in nodes_with_fluxes]
         
 class PhysicalSystem:
     """
     Defines a physical system
     """
-    def __init__(self,te,ns,physical_blocks):
+    def __init__(self,te,ns,physical_blocks,command_blocks):
         self.te=te
         self.ns=ns
-        self.blocks=[]        
-        self.nodes=[]
+        self.physical_blocks=[]        
+        self.physical_nodes=[]
+        self.variables=[]
+        self.command_blocks=[]
         for block in physical_blocks:
-            self.AddBlock(block)
+            self.AddPhysicalBlock(block)
+
+        for block in command_blocks:
+            self.AddCommandBlock(block)
             
         self._utd_ds=False
 
-    def AddBlock(self,block):
+    def AddPhysicalBlock(self,block):
         if isinstance(block,PhysicalBlock):
-            self.blocks.append(block)
-            for node in block.nodes:
-                self._AddNode(node)
+            self.physical_blocks.append(block)
+            for node in block.physical_nodes:
+                self._AddPhysicalNode(node)
         else:
             raise TypeError
         self._utd_ds=False
+
         
-    def _AddNode(self,node):
+    def _AddPhysicalNode(self,node):
         if isinstance(node,PhysicalNode):
-            if not node in self.nodes:
-                self.nodes.append(node)
+            if not node in self.physical_nodes:
+                self.physical_nodes.append(node)
         self._utd_ds=False        
+
+    def AddCommandBlock(self,block):
+        if isinstance(block,Block):
+            self.command_blocks.append(block)
+            for variable in block.inputs+block.outputs:
+                self._AddVariable(variable)
+        else:
+            raise TypeError
+        self._utd_ds=False
+
+        
+    def _AddVariable(self,variable):
+        if isinstance(variable,Variable):
+            if not variable in self.variables:
+                self.variables.append(variable)
+        self._utd_ds=False        
+
         
     def GenerateDynamicSystem(self):
-        from bms.blocks.continuous import WeightedSum
+#        from bms.blocks.continuous import WeightedSum
         G=nx.Graph()
 #        variables={}
         # Adding node variables
-        for node in self.nodes:
+        for node in self.physical_nodes:
             G.add_node(node.variable,bipartite=0)
-        for block in self.blocks:
+        for block in self.physical_blocks:
+#            print(block.variables)
             for variable in block.variables:
                 # add variable realted to connection
                 G.add_node(node.variable,bipartite=0)
-            ne,nv=block.occurence_matrix.shape                
+            ne,nv=block.occurence_matrix.shape  
+#            print(block,block.occurence_matrix)              
             # Add equations of blocs
             for ie in range(ne): 
                 G.add_node((block,ie),bipartite=1)
                 for iv in range(nv):
+#                    print(iv)
                     if block.occurence_matrix[ie,iv]==1:
                         if iv%2==0:
-                            G.add_edge((block,ie),block.nodes[iv//2].variable)
+                            G.add_edge((block,ie),block.physical_nodes[iv//2].variable)
                         else:
                             G.add_edge((block,ie),block.variables[iv//2])
         # Adding equation of physical nodes: sum of incomming variables =0
-        for node in self.nodes:
+        # Restricted to nodes to which are brought fluxes
+        for node in self.physical_nodes:
+            # linking conservative equation of flux to potential if 
+            if node.potential_in_conservative_law:
+                G.add_edge(node,node.variable)
+            
+            # Linking fluxes of node
             G.add_node(node,bipartite=1)
-            for block in self.blocks:
-                for inb,node_block in enumerate(block.nodes):
+            for block in self.physical_blocks:
+                for inb in block.nodes_with_fluxes:
+#                    print(block,block.physical_nodes[inb].name)
+                    node_block=block.physical_nodes[inb]
                     if node==node_block:
-                        G.add_edge(node,block.variables[inb])
+                        G.add_edge(node,block.variables[block.nodes_with_fluxes.index(inb)])
+#                        print(node_block,block.variables[inb].name)
                         
-#        pos=nx.spring_layout(G)
-#        nx.draw(G,pos) 
-#        nx.draw_networkx_labels(G,pos)
-                        
-#        import matplotlib.pyplot as plt
-#        plt.figure()
         G2=nx.DiGraph()
         G2.add_nodes_from(G)
         eq_out_var={}
-#        print('=====================')
         for e in nx.bipartite.maximum_matching(G).items():
 #            print(e[0].__class__.__name__)
             # eq -> variable
-            if e[0].__class__.__name__=='Variable':              
+            if e[0].__class__.__name__=='Variable':       
                 G2.add_edge(e[1],e[0])
-                eq_out_var[e[1]]=e[0]                
+                eq_out_var[e[1]]=e[0]
             else:
                 G2.add_edge(e[0],e[1])
                 eq_out_var[e[0]]=e[1]
                 
         for e in G.edges():
-            if e[0].__class__.__name__=='Variable':                
+            if e[0].__class__.__name__=='Variable':         
                 G2.add_edge(e[0],e[1])
             else:
                 G2.add_edge(e[1],e[0])
 #        print('@@@@@@@@@@@@@@@@@@@@@@@@')
-#        pos=nx.spring_layout(G2)
-#        nx.draw(G2,pos)       
-#        nx.draw_networkx_labels(G2,pos)
+
+        ## Draw graph for debug
+#        pos=nx.spring_layout(G)
+#        nx.draw(G,pos)       
+#        names={}
+#        for node in G.nodes():
+#            if type(node)==tuple:
+#                names[node]=(node[0].name,node[1])
+#            else:
+#                names[node]=node.name
+#        nx.draw_networkx_labels(G,pos,names)
         
         sinks=[]
         sources=[]    
@@ -580,7 +621,11 @@ class PhysicalSystem:
                 sources.append(node)
 #        print(sinks,sources)
         
-        if (sinks!=[])|(sources!=[]):
+        if sinks!=[]:
+            print(sinks)
+            raise ModelError
+        if sources!=[]:
+            print(sources)
             raise ModelError
             
         # Model is solvable: it must say to equations of blocks which is their 
@@ -597,21 +642,28 @@ class PhysicalSystem:
                 # Sum of incomming variables at nodes
                 # searching attached nodes
                 variables=[]
-                for block in self.blocks:
+                for block in self.physical_blocks:
                     try:
-                        ibn=block.nodes.index(block_node)
-                        variable2=block.variables[ibn]
-                        if variable2!=variable:
-                            variables.append(variable2)
-                    except:
-                        ValueError
+#                        print(block)
+                        ibn=block.physical_nodes.index(block_node)
+#                        print(ibn)
+                        if ibn in block.nodes_with_fluxes:
+                            variable2=block.variables[ibn]
+                            if variable2!=variable:
+                                variables.append(variable2)
+                    except ValueError:
+                        pass
 #                print('v: ',variables,variable)
 #                v1=Variable()
 #                print('lv',len(variables))
-                model_blocks.append(WeightedSum(variables,variable,[-1]*len(variables)))
-#                model_blocks.append(Gain(v1,variable,-1))
+
+#                model_blocks.append(WeightedSum(variables,variable,[-1]*len(variables)))
+                model_blocks.extend(block_node.ConservativeLaw(variables,variable))
+
+                #                model_blocks.append(Gain(v1,variable,-1))
                 
 #        print(model_blocks)
+        model_blocks.extend(self.command_blocks)
         return DynamicSystem(self.te,self.ns,model_blocks)
         
     def _get_ds(self):
