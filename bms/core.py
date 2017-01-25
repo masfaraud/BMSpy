@@ -77,6 +77,9 @@ class Signal(Variable):
         self._ForwardValues()
             
     def _ForwardValues(self):
+        """
+        Implementation for problems with derivative conditions on variables
+        """
         pass
 
     
@@ -156,6 +159,7 @@ class Block:
 #        self.outputs[0]._values[it]=(1-alpha)*new_value+alpha*self.outputs[0]._values[it]
         
     def Solve(self,it,ts,alpha):
+#        print('it,block/alpha/eval/old_eval/res: ',it,self.__class__.__name__,alpha,self.Evaluate(it,ts),self.outputs[0]._values[it],(1-alpha)*self.Evaluate(it,ts)+alpha*self.outputs[0]._values[it])
         self.outputs[0]._values[it]=(1-alpha)*self.Evaluate(it,ts)+alpha*self.outputs[0]._values[it]
 
 class ModelError(Exception):
@@ -211,7 +215,7 @@ class DynamicSystem:
         Add a variable to the model. Should not be used by end-user
         """
         if isinstance(variable,Signal):
-            if not variable in self.variables:
+            if not variable in self.signals:
                 self.signals.append(variable)
         elif isinstance(variable,Variable):
             if not variable in self.variables:
@@ -346,7 +350,7 @@ class DynamicSystem:
                 print('The variable '+variable.name+' has two block solving it!')                
                 raise ModelError
                             
-    def Simulate(self,alpha=0.2,conv_crit=0.05,max_iter=10):
+    def Simulate(self,alpha=0.2,conv_crit=0.03,max_iter=20):
         self.CheckModelConsistency()
         solved_blocks_a,loops,solved_blocks_b=self._ResolutionOrder()
         d=[]
@@ -364,30 +368,63 @@ class DynamicSystem:
 #            conv=0.
             unconv_loops=list(range(len(loops)))
             niter=0
+            max_value={}
+            min_value={}
+#            alpha_l=alpha
             while len(unconv_loops)>0:
 #                print(len(unconv_loops))
                 for il in unconv_loops:
                     conv_l=0.
+
+#                    print('@@@@@@')
                     for block in loops[il]:
                         outputs1=block.OutputValues(it+self.max_order+2,1)
 #                        print(outputs1)
 #                        print(block.outputs[0].values)
                         block.Solve(it+self.max_order+1,self.ts,alpha)                        
                         outputs2=block.OutputValues(it+self.max_order+2,1)
-#                        print(outputs2)
+#                        print(print(block,outputs1,outputs2))
+                        if abs(outputs2[0])>10000:
+#                            print(block.InputValues(it),block.OutputValues(it))
+#                            print(block.Mo,block.Mi)
+                            break
+                        for output,value in zip(block.outputs,outputs2):
+                            try:
+                                max_value[output]=max(value[0],max_value[output])
+                            except KeyError: 
+                                max_value[output]=value[0]
+                            try:    
+                                min_value[output]=min(value[0],min_value[output])
+                            except KeyError: 
+                                min_value[output]=value[0]
 #                        print(block.outputs[0].values)
-                        convb=np.min(np.abs((outputs2-outputs1)/outputs1))
+#                        convb=np.min(np.abs((outputs2-outputs1)/outputs1))
+                        convb=0.
+                        for output,value1,value2 in zip(block.outputs,outputs1,outputs2):
+#                            print(value1[0],value2[0])
+                            convb=max(convb,abs((value2[0]-value1[0])/(max_value[output]-min_value[output])))
+#                        print(convb)
 #                        print(outputs1,outputs2,convb)
                         conv_l=max(convb,conv_l)
+#                        print('##',conv_l)
                     d.append(conv_l)
 #                        print('convl',conv_l)
                     if conv_l<conv_crit:
                         unconv_loops.remove(il)
                         break
-#                    print(il,conv_l)
+                    if abs(outputs2[0])>10000:
+                        break
+
+                        #                    print(il,conv_l)
                 niter+=1    
+#                if niter>3:
+#                    alpha_l=0.
                 if niter>max_iter:
                     break
+                if abs(outputs2[0])>10000:
+                    break
+
+#            print('niter, conv: ',niter,conv_l,type(conv_l))
             
             for block in solved_blocks_b:     
                 block.Solve(it+self.max_order+1,self.ts,alpha=0.)
@@ -469,8 +506,9 @@ class PhysicalNode:
     """
     Abstract class
     """
-    def __init__(self,potential_in_conservative_law,node_name,potential_variable_name,flux_variable_name):
-        self.potential_in_conservative_law=potential_in_conservative_law
+    def __init__(self,cl_solves_potential,cl_solves_fluxes,node_name,potential_variable_name,flux_variable_name):
+        self.cl_solves_potential=cl_solves_potential
+        self.cl_solves_fluxes=cl_solves_fluxes
         self.name=node_name
         self.potential_variable_name=potential_variable_name
         self.flux_variable_name=flux_variable_name
@@ -564,22 +602,22 @@ class PhysicalSystem:
                             G.add_edge((block,ie),block.physical_nodes[iv//2].variable)
                         else:
                             G.add_edge((block,ie),block.variables[iv//2])
-        # Adding equation of physical nodes: sum of incomming variables =0
+        # Adding equation of physical nodes: conservative law of node from its occurence matrix
         # Restricted to nodes to which are brought fluxes
-        for node in self.physical_nodes:
+        for node in self.physical_nodes:            
             # linking conservative equation of flux to potential if 
-            if node.potential_in_conservative_law:
+            if node.cl_solves_potential:
                 G.add_edge(node,node.variable)
-            
-            # Linking fluxes of node
-            G.add_node(node,bipartite=1)
-            for block in self.physical_blocks:
-                for inb in block.nodes_with_fluxes:
-#                    print(block,block.physical_nodes[inb].name)
-                    node_block=block.physical_nodes[inb]
-                    if node==node_block:
-                        G.add_edge(node,block.variables[block.nodes_with_fluxes.index(inb)])
-#                        print(node_block,block.variables[inb].name)
+            if node.cl_solves_fluxes:
+                # Linking fluxes of node
+                G.add_node(node,bipartite=1)
+                for block in self.physical_blocks:
+                    for inb in block.nodes_with_fluxes:
+    #                    print(block,block.physical_nodes[inb].name)
+                        node_block=block.physical_nodes[inb]
+                        if node==node_block:
+                            G.add_edge(node,block.variables[block.nodes_with_fluxes.index(inb)])
+    #                        print(node_block,block.variables[inb].name)
                         
         G2=nx.DiGraph()
         G2.add_nodes_from(G)

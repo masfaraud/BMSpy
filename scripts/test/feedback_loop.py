@@ -16,7 +16,7 @@ Kc=3
 tau=1
 
 I=Step(('input','i'),100.)
-AI=bms.Variable(('adapted input','ai'),100.)
+AI=bms.Variable(('adapted input','ai'),[100.])
 dI=bms.Variable(('error','dI'))
 O=bms.Variable(('Output','O'))#
 F=bms.Variable(('Feedback','F'))#
@@ -33,6 +33,6 @@ ds.PlotVariables([[I,O,dI]])
 
 I2=Step(('input','i'),100.)
 O2=bms.Variable(('Output','O'))#
-ds2=bms.DynamicSystem(3,1000,[ODE(I2,O2,[Ka*Kb],[1+Kc*Kb,tau])])
+ds2=bms.DynamicSystem(3,600,[ODE(I2,O2,[Ka*Kb],[1+Kc*Kb,tau])])
 ds2.Simulate()
 ds2.PlotVariables()

@@ -10,7 +10,7 @@ from bms.signals.functions import Step
 
 class RotationalNode(PhysicalNode):
     def __init__(self,inertia,friction,name=''):
-        PhysicalNode.__init__(self,True,name,'Rotational speed','Torque')
+        PhysicalNode.__init__(self,True,True,name,'Rotational speed','Torque')
         self.inertia=inertia
         self.friction=friction
         
@@ -30,7 +30,7 @@ class RotationalNode(PhysicalNode):
         
 class TranslationalNode(PhysicalNode):
     def __init__(self,mass,SCx,friction,name=''):
-        PhysicalNode.__init__(self,True,name,'Speed','Force')
+        PhysicalNode.__init__(self,True,True,name,'Speed','Force')
         self.mass=mass
         self.SCx=SCx
         self.friction=friction
@@ -96,6 +96,31 @@ class Brake(PhysicalBlock):
             # U1=0
             if variable==self.variables[0]:
                 return[Gain(self.commands[0],variable,-self.Tmax)]                
+
+class Clutch(PhysicalBlock):     
+    """
+    Simple clutch, must be improved with non linearity of equilibrium
+    """
+    def __init__(self,node1,node2,Tmax,name='Brake'):
+        occurence_matrix=np.array([[0,1,0,0],[0,1,0,1]])
+        command=Variable('Clutch command')
+        self.Tmax=Tmax
+        PhysicalBlock.__init__(self,[node1],[0],occurence_matrix,[command],name)
+
+    def PartialDynamicSystem(self,ieq,variable):
+        """
+        returns dynamical system blocks associated to output variable
+        """
+        if ieq==0:
+            # C1=-f*Tmax*sign(w1-w2)
+            if variable==self.variables[0]:
+                return[Gain(self.commands[0],variable,-self.Tmax)]                
+        elif ieq==1:
+            # C1=-C2
+            if variable==self.variables[0]:
+                return [Gain(self.variables[1],variable,-1)]
+            if variable==self.variables[1]:
+                return [Gain(self.variables[0],variable,-1)]
 
 class Wheel(PhysicalBlock):     
     """

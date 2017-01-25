@@ -10,10 +10,10 @@ from bms.signals.functions import Step
 
 class ElectricalNode(PhysicalNode):
     def __init__(self,name=''):
-        PhysicalNode.__init__(self,False,name,'Voltage','Intensity')
+        PhysicalNode.__init__(self,False,True,name,'Voltage','Intensity')
         
     def ConservativeLaw(self,flux_variables,output_variable):
-        return WeightedSum(flux_variables,output_variable,[-1]*len(flux_variables))
+        return [WeightedSum(flux_variables,output_variable,[-1]*len(flux_variables))]
         
 class Ground(PhysicalBlock):
     def __init__(self,node1,name='Ground'):
@@ -162,7 +162,7 @@ class Battery(PhysicalBlock):
 
 class Capacitor(PhysicalBlock):
     def __init__(self,node1,node2,C,name='Capacitor'):
-        occurence_matrix=np.array([[1,1,1,0],[0,1,0,1]])#1st eq: (U1-U2)=R(i1-i2) 2nd: i1=-i2
+        occurence_matrix=np.array([[1,0,1,0],[0,1,0,1]])#1st eq: (U1-U2)=R(i1-i2) 2nd: i1=-i2
         PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
         self.C=C
         
@@ -190,14 +190,14 @@ class Capacitor(PhysicalBlock):
                 block1=ODE(self.variables[0],Uc,[-1],[0,self.C])
                 sum1=Sum([self.physical_nodes[0].variable,Uc],variable)
                 return [block1,sum1]
-            elif variable==self.variables[0]:
-                print('3')
-                # i1 is output
-                # i1=pC(U1-U2)
-                ic=Variable(hidden=True)
-                subs1=Subtraction(self.physical_nodes[0].variable,self.physical_nodes[1].variable,ic)
-                block1=ODE(ic,variable,[0,self.C],[1])
-                return [block1,subs1]
+#            elif variable==self.variables[0]:
+#                print('3')
+#                # i1 is output
+#                # i1=pC(U1-U2)
+#                ic=Variable(hidden=True)
+#                subs1=Subtraction(self.physical_nodes[0].variable,self.physical_nodes[1].variable,ic)
+#                block1=ODE(ic,variable,[0,self.C],[1])
+#                return [block1,subs1]
         elif ieq==1:
             # i1=-i2
             if variable==self.variables[0]:

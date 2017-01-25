@@ -63,10 +63,10 @@ class WeightedSum(Block):
         return value
 
     def LabelBlock(self):
-        return 'W+'
+        return 'W+'+str(self.weights)
 
     def LabelConnections(self):
-        return []
+        return self.weights
 
         
 class Subtraction(Block):
@@ -172,6 +172,12 @@ class ODE(Block):
 
         Mi,Mo=self.OutputMatrices(ts)
         # Solve at time t with time step ts
+#        print(Mi,Mo)
+#        print(np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T))
+#        if abs(np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T))>10000:
+#        print(Mi,self.InputValues(it),Mo,self.OutputValues(it))
+#            print(np.dot(Mi,self.InputValues(it).T))
+#            print(np.dot(Mo,self.OutputValues(it).T))
         return np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T)
 
     def LabelBlock(self):

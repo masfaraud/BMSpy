@@ -25,9 +25,9 @@ I=3e-5
 friction_v=0.009*mass
 friction_c=0.01
 Ge=1.5# Gain of engine throttle
-Gb=1.6# Gain of brake
+Gb=1.1# Gain of brake
 Tmax_b=1000 # Max braking torque
-Vb=0.6# Speed error at beginning of braking
+Vb=0.3# Speed error at beginning of braking
 
 crankshaft=RotationalNode(I,friction_c,'crankshaft')
 vehicle=TranslationalNode(mass,SCx,friction_v,'vehicle')
