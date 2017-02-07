@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 #import math
 import networkx as nx
 import dill
+from scipy.optimize import fsolve
 
 
 class Variable:
@@ -153,14 +154,9 @@ class Block:
         for iv,variable in enumerate(self.outputs):
             O[iv,:]=variable._values[it-nsteps:it]
         return O
-        
-#    def WriteNewValue(self,new_value,it,alpha):
-##        print('wnv:',self.outputs[0]._values[it]-new_value,'@',it)
-#        self.outputs[0]._values[it]=(1-alpha)*new_value+alpha*self.outputs[0]._values[it]
-        
-    def Solve(self,it,ts,alpha):
-#        print('it,block/alpha/eval/old_eval/res: ',it,self.__class__.__name__,alpha,self.Evaluate(it,ts),self.outputs[0]._values[it],(1-alpha)*self.Evaluate(it,ts)+alpha*self.outputs[0]._values[it])
-        self.outputs[0]._values[it]=(1-alpha)*self.Evaluate(it,ts)+alpha*self.outputs[0]._values[it]
+                
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=self.Evaluate(it,ts)
 
 class ModelError(Exception):
     def __init__(self):
@@ -229,9 +225,9 @@ class DynamicSystem:
             # Generate graph
             self._graph=nx.DiGraph()
             for variable in self.variables:
-                self._graph.add_node(variable)
+                self._graph.add_node(variable,bipartite=0)
             for block in self.blocks:
-                self._graph.add_node(block)
+                self._graph.add_node(block,bipartite=1)
                 for variable in block.inputs:
                     self._graph.add_edge(variable,block)
                 for variable in block.outputs:
@@ -245,197 +241,178 @@ class DynamicSystem:
     
         
         
-    def _ResolutionOrder(self):
+    def _ResolutionOrder(self,variables_to_solve):
         """
-        returns 2 list:
-         * one of blocks that would solve completely their outputs
-         * one of loops(list of blocks)
-        """
-        solved_b=[]# solved before loops
-        loops=[] 
-        solved_a=[]# solved after loops
+        return a list of lists of tuples (block,output,ndof) to be solved
         
-        # Finding completely solved variables
-        solved_variables={}
-        for signal in self.signals:
-            solved_variables[signal]=True
+        """
+#    Gp=nx.DiGraph()
+#
+#    for i in range(nvar):
+#        Gp.add_node('v'+str(i),bipartite=0)
+#    
+#    for i in range(neq):
+#        Gp.add_node('e'+str(i),bipartite=1)
+#        for j in range(nvar):
+#            if Mo[i,j]==1:
+#                Gp.add_edge('e'+str(i),'v'+str(j))
+            
+        
+        Gp=nx.DiGraph()
         for variable in self.variables:
-            solved_variables[variable]=False            
-            
-        nsv=True# new solved  variables
-        blocks=self.blocks[:]
-        while nsv:
-            nsv=False
-            for block in blocks:
-                solvable=True
-                for variable in block.inputs:
-                    if not solved_variables[variable]:
-                        solvable=False
-                        break
-                if solvable:
-                    nsv=True
-                    for variable in block.outputs:
-                        solved_variables[variable]=True
-                    blocks.remove(block)
-                    solved_b.append(block)
+            Gp.add_node(variable,bipartite=0)
+        for block in self.blocks:
+            for iov,output_variable in enumerate(block.outputs):
+                Gp.add_node((block,iov),bipartite=1)
+                Gp.add_edge((block,iov),output_variable)
+                Gp.add_edge(output_variable,(block,iov))
+                for input_variable in block.inputs:
+                    if not isinstance(input_variable,Signal):
+                        Gp.add_edge(input_variable,(block,iov))
         
-        # loops        
-        for loop in nx.simple_cycles(self.graph):
-            # Find the most solved variable for beginning
-            loop_element_solved=False
-            for ie,element in enumerate(loop):
-                try:
-                    if solved_variables[element]:
-                        loop2=loop[ie:]+loop[:ie]
-                        loops.append(loop2[1::2])
-                        loop_element_solved=True
-                        break
-            
-                except:
-                    # element in a block
-                    pass
-            if not loop_element_solved:
-                if loop[0].__class__.__name__=='Variable':
-                    blocks_loop=loop[1::2]
-                else:
-                    blocks_loop=loop[0::2]
-                loops.append(blocks_loop)
-                    
-        # delete block in loops
-        for loop in loops:
-            for block in loop:
-                for variable in block.outputs:
-                    solved_variables[variable]=True
-                try:
-                    blocks.remove(block)
-                except ValueError:
-                    pass
-                
-#        print(blocks)
-        nsv=True# new solved  variables
-#        blocks=self.blocks[:]
-        while nsv:
-            nsv=False
-            for block in blocks:
-#                print(block)
-                solvable=True
-                for variable in block.inputs:
-#                    print('iv: ',variable.name,solved_variables[variable])
-                    if not solved_variables[variable]:
-                        solvable=False
-                        break
-                if solvable:
-                    nsv=True
-                    for variable in block.outputs:
-                        solved_variables[variable]=True
-                    blocks.remove(block)
-                    solved_a.append(block)
+    #    for n1,n2 in M.items():
+    #        Gp.add_edge(n1,n2)        
+    
+        
+        sinks=[]
+        sources=[]
+        for node in Gp.nodes():
+            if Gp.out_degree(node)==0:
+                sinks.append(node)
+            elif Gp.in_degree(node)==0:
+                sources.append(node)
+        
+        G2=sources[:]
+        for node in sources:
+            for node2 in nx.descendants(Gp,node):
+                if node2 not in G2:
+                    G2.append(node2)
+        
+        if G2!=[]:
+            print(G2)
+            raise ModelError
+    
+        
+        G3=sinks[:]
+        for node in sinks:
+            for node2 in nx.ancestors(Gp,node):
+                if node2 not in G3:
+                    G3.append(node2)
 
+        if G3!=[]:
+            raise ModelError
+    
+#        vars_resolvables=[]
+#        for var in vars_resoudre: 
+#            if not 'v'+str(var) in G2+G3:
+#                vars_resolvables.append(var)
+                
+            
+#        G1=Gp.copy()
+#        G1.remove_nodes_from(G2+G3)
+#        
+#        M1=nx.bipartite.maximum_matching(G1)
+#        G1p=nx.DiGraph()
+#        
+#        G1p.add_nodes_from(G1.nodes())
+#        for e in G1.edges():
+#            # equation vers variable
+#            if e[0][0]=='v':
+#                G1p.add_edge(e[0],e[1])        
+#            else:
+#                G1p.add_edge(e[1],e[0])   
+#    #    print(len(M))
+#        for n1,n2 in M1.items():
+#    #        print(n1,n2)
+#            if n1[0]=='e':
+#                G1p.add_edge(n1,n2)        
+#            else:
+#                G1p.add_edge(n2,n1)        
+                
+            
+        scc=list(nx.strongly_connected_components(Gp))
+    #    pos=nx.spring_layout(G1p)
+    #    plt.figure()
+    #    nx.draw(G1p,pos)
+    #    nx.draw_networkx_labels(G1p,pos)
+#        print(scc)
+        if scc!=[]:
+            C=nx.condensation(Gp,scc)
+            isc_vars=[]
+            for isc,sc in enumerate(scc):
+                for var in variables_to_solve:
+                    if var in sc:
+                        isc_vars.append(isc)
+                        break
+            ancestors_vars=isc_vars[:]
+            
+            for isc_var in isc_vars:                                
+                for ancetre in nx.ancestors(C,isc_var):
+                    if ancetre not in ancestors_vars:
+                        ancestors_vars.append(ancetre)
                     
-        return solved_b,loops,solved_a
-        
-    def CheckModelConsistency(self):
-        """
-        Check for model consistency:
-            - an input variable can't be set as the output of a block
-            - a variable can't be the output of more than one block
-             
-        """
-        for variable in self.signals:
-            if self.graph.predecessors(variable)!=[]:
-                print('The variable '+variable.name+' is free!')
-                raise ModelError
-        for variable in self.variables:
-            if len(self.graph.predecessors(variable))>1:
-                print('The variable '+variable.name+' has two block solving it!')                
-                raise ModelError
+            order_sc=[sc for sc in nx.topological_sort(C,reverse=False) if sc in ancestors_vars]
+            order_ev=[]
+            for isc in order_sc:            
+                evs=list(scc[isc])# liste d'équations et de variables triées pour être séparées
+#                print(evs)
+#                levs=int(len(evs)/2)
+                eqs=[]
+                var=[]
+                for element in evs:
+                    if type(element)==tuple:
+                        eqs.append(element)
+                    else:
+                        var.append(element)
+                order_ev.append((len(eqs),eqs,var))
+                
+            return order_ev
+            
+        raise ModelError
+    
+    
                             
-    def Simulate(self,alpha=0.2,conv_crit=0.03,max_iter=20):
-        self.CheckModelConsistency()
-        solved_blocks_a,loops,solved_blocks_b=self._ResolutionOrder()
-        d=[]
+    def Simulate(self,variables_to_solve=None):
+        if variables_to_solve==None:
+            variables_to_solve=[variable for variable in self.variables if not variable.hidden]
+        
+        order=self._ResolutionOrder(variables_to_solve)
+
         # Initialisation of variables values
         for variable in self.variables+self.signals:
-#            if not isinstance(variable,Input):
             variable._InitValues(self.ns,self.ts,self.max_order)
-#            else:
-#                variable.Values(self.ns,self.ts,self.max_order)
+
         for it,t in enumerate(self.t[1:]):           
-#            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
-            for block in solved_blocks_a:     
-                block.Solve(it+self.max_order+1,self.ts,alpha=0.)
-            
-#            conv=0.
-            unconv_loops=list(range(len(loops)))
-            niter=0
-            max_value={}
-            min_value={}
-#            alpha_l=alpha
-            while len(unconv_loops)>0:
-#                print(len(unconv_loops))
-                for il in unconv_loops:
-                    conv_l=0.
+            for neqs,equations,variables in order:
+                if neqs==1:
+                    equations[0][0].Solve(it+self.max_order+1,self.ts)
+                else:
+                    x0=np.zeros(neqs)
+#                    print('===========')
+                    def f(x):
+                        # Writing variables values proposed by optimizer
+                        for i,xi in enumerate(x):
+                            equations[i][0].outputs[equations[i][1]]._values[it+self.max_order+1]=xi
 
-#                    print('@@@@@@')
-                    for block in loops[il]:
-                        outputs1=block.OutputValues(it+self.max_order+2,1)
-#                        print(outputs1)
-#                        print(block.outputs[0].values)
-                        block.Solve(it+self.max_order+1,self.ts,alpha)                        
-                        outputs2=block.OutputValues(it+self.max_order+2,1)
-#                        print(print(block,outputs1,outputs2))
-                        if abs(outputs2[0])>10000:
-#                            print(block.InputValues(it),block.OutputValues(it))
-#                            print(block.Mo,block.Mi)
-                            break
-                        for output,value in zip(block.outputs,outputs2):
-                            try:
-                                max_value[output]=max(value[0],max_value[output])
-                            except KeyError: 
-                                max_value[output]=value[0]
-                            try:    
-                                min_value[output]=min(value[0],min_value[output])
-                            except KeyError: 
-                                min_value[output]=value[0]
-#                        print(block.outputs[0].values)
-#                        convb=np.min(np.abs((outputs2-outputs1)/outputs1))
-                        convb=0.
-                        for output,value1,value2 in zip(block.outputs,outputs1,outputs2):
-#                            print(value1[0],value2[0])
-                            convb=max(convb,abs((value2[0]-value1[0])/(max_value[output]-min_value[output])))
-#                        print(convb)
-#                        print(outputs1,outputs2,convb)
-                        conv_l=max(convb,conv_l)
-#                        print('##',conv_l)
-                    d.append(conv_l)
-#                        print('convl',conv_l)
-                    if conv_l<conv_crit:
-                        unconv_loops.remove(il)
-                        break
-                    if abs(outputs2[0])>10000:
-                        break
-
-                        #                    print(il,conv_l)
-                niter+=1    
-#                if niter>3:
-#                    alpha_l=0.
-                if niter>max_iter:
-                    break
-                if abs(outputs2[0])>10000:
-                    break
-
-#            print('niter, conv: ',niter,conv_l,type(conv_l))
-            
-            for block in solved_blocks_b:     
-                block.Solve(it+self.max_order+1,self.ts,alpha=0.)
-    
-        return d
+                        # Computing regrets
+                        r=[]
+                        for ieq,(block,neq) in enumerate(equations):
+#                            print(block,it)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts).shape)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts),block)
+                            r.append(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(x[ieq],block.Evaluate(it+self.max_order+1,self.ts)[neq])
+                        return r
+                    x=fsolve(f,x0)
+#                    print(x,f(x))
+                        
                     
                 
 
     def VariablesValues(self,variables,t): 
         """
-        Returns the value of given variables at time t
+        Returns the value of given variables at time t. 
+        Linear interpolation is performed between two time steps.
         
         :param variables: one variable or a list of variables
         :param t: time of evaluation

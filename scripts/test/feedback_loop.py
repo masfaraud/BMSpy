@@ -27,12 +27,12 @@ b3=ODE(dI,O,[Kb],[1,tau])
 b4=Gain(O,F,Kc)
 
 ds=bms.DynamicSystem(3,1000,[b1,b2,b3,b4])
-ds.Simulate()
-ds.PlotVariables([[I,O,dI]])
+r=ds.Simulate()
+ds.PlotVariables([[I,O,dI,F]])
 
 
-I2=Step(('input','i'),100.)
-O2=bms.Variable(('Output','O'))#
-ds2=bms.DynamicSystem(3,600,[ODE(I2,O2,[Ka*Kb],[1+Kc*Kb,tau])])
-ds2.Simulate()
-ds2.PlotVariables()
+#I2=Step(('input','i'),100.)
+#O2=bms.Variable(('Output','O'))#
+#ds2=bms.DynamicSystem(3,600,[ODE(I2,O2,[Ka*Kb],[1+Kc*Kb,tau])])
+#ds2.Simulate()
+#ds2.PlotVariables()

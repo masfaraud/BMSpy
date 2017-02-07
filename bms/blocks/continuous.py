@@ -38,7 +38,7 @@ class Sum(Block):
         Block.__init__(self,inputs,[output_variable],1,0)
         
     def Evaluate(self,it,ts):
-        return np.sum(self.InputValues(it))
+        return np.array([np.sum(self.InputValues(it))])
         
     def LabelBlock(self):
         return '+'
@@ -96,7 +96,7 @@ class Product(Block):
 
     def Evaluate(self,it,ts):
         value1,value2=self.InputValues(it)
-        return value1*value2
+        return np.array([value1*value2])
 
     def LabelBlock(self):
         return 'x'
@@ -197,7 +197,7 @@ class FunctionBlock(Block):
         self.function=function
 
     def Evaluate(self,it,ts):
-        return self.function(self.InputValues(it)[0])
+        return np.array([self.function(self.InputValues(it)[0])])
 
     def LabelBlock(self):
         return 'f(t)'

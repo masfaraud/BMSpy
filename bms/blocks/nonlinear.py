@@ -5,24 +5,25 @@ Collection of non-linear blocks
 """
 
 from bms import Block
+from numpy import array
 
-class DeadZone(Block):
-    """
-        
-    """
-    def __init__(self,input_variable,output_variable,zone_width):
-        Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)
-        self.zone_width=zone_width
-
-    def Evaluate(self,it,ts):
-        input_value=self.InputValues(it)[0]
-        if value<-0.5*self.zone_width:
-            output=value+0.5*self.zone_width
-        elif value>-0.5*self.zone_width:
-            output=value-0.5*self.zone_width
-        else:
-            output=0
-        self.outputs[0]._values[it]=output
+#class DeadZone(Block):
+#    """
+#        
+#    """
+#    def __init__(self,input_variable,output_variable,zone_width):
+#        Block.__init__(self,[input_variable,trigger_variable],[output_variable],1,0)
+#        self.zone_width=zone_width
+#
+#    def Evaluate(self,it,ts):
+#        input_value=self.InputValues(it)[0]
+#        if value<-0.5*self.zone_width:
+#            output=value+0.5*self.zone_width
+#        elif value>-0.5*self.zone_width:
+#            output=value-0.5*self.zone_width
+#        else:
+#            output=0
+#        self.outputs[0]._values[it]=output
 
 
 class Hysteresis(Block):
@@ -75,7 +76,7 @@ class Saturation(Block):
             value=self.min_value
         elif value>self.max_value:
             value=self.max_value
-        return value
+        return array([value])
         
     def LabelBlock(self):
         return 'Sat'
@@ -99,11 +100,15 @@ class Coulomb(Block):
             output=self.max_value
         else:
             if abs(input_value)<self.max_value:
-                output=input_value
+                output=-input_value
             else:
-                output=self.max_value
+                if input_value<0:
+                    output=self.max_value
+                else:
+                    output=-self.max_value
+                    
 #        print(input_value,speed,output)
-        return output
+        return array([output])
         
     def LabelBlock(self):
         return 'Clb'

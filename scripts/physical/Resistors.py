@@ -34,15 +34,4 @@ ds=ps.dynamic_system
 ds.Simulate()
 ds.PlotVariables([[U,n1.variable,n2.variable,n3.variable],[res1.variables[0],res2.variables[0]]])
 
-# Validation: analytical solutions
 
-# Debug
-#ro=ds._ResolutionOrder()
-#for b in ro:
-#    print(b)
-#    print('inputs')
-#    for var in b.inputs:
-#        print(var.name)
-#    print('outputs')
-#    for var in b.outputs:
-#        print(var.name)
