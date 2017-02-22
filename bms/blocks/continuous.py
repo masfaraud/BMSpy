@@ -12,15 +12,15 @@ import math
 
 class Gain(Block):
     """
-        output=value* input    
+        output=value* input + offset   
     """
-    def __init__(self,input_variable,output_variable,value):
+    def __init__(self,input_variable,output_variable,value,offset=0):
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.value=value
+        self.offset=offset
 
     def Evaluate(self,it,ts):
-#        print(self.inputs,self.outputs)
-        return self.value*self.InputValues(it)[0]
+        return self.value*self.InputValues(it)[0]+self.offset
 
     def LabelBlock(self):
         return str(self.value)
@@ -34,7 +34,6 @@ class Sum(Block):
         output=\sum inputs    
     """
     def __init__(self,inputs,output_variable):
-        print(len(inputs),[i.name for i in inputs])
         Block.__init__(self,inputs,[output_variable],1,0)
         
     def Evaluate(self,it,ts):
@@ -51,15 +50,14 @@ class WeightedSum(Block):
         Defines a weighted sum over inputs
         output=\sum w_i * input_i    
     """
-    def __init__(self,inputs,output_variable,weights,constant=0):
-        print(len(inputs),[i.name for i in inputs])
+    def __init__(self,inputs,output_variable,weights,offset=0):
         Block.__init__(self,inputs,[output_variable],1,0)
         self.weights=weights
-        self.constant=constant
+        self.offset=offset
         
     def Evaluate(self,it,ts):
 
-        value=np.dot(self.weights,self.InputValues(it))+self.constant
+        value=np.dot(self.weights,self.InputValues(it))+self.offset
         return value
 
     def LabelBlock(self):

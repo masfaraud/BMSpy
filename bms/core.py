@@ -12,8 +12,8 @@ import matplotlib.pyplot as plt
 #import math
 import networkx as nx
 import dill
-from scipy.optimize import fsolve
-
+from scipy.optimize import fsolve,root,minimize
+import cma
 
 class Variable:
     """ Defines a variable
@@ -159,11 +159,11 @@ class Block:
         self.outputs[0]._values[it]=self.Evaluate(it,ts)
 
 class ModelError(Exception):
-    def __init__(self):
-        pass
-    
+    def __init__(self,message):
+        self.message=message
+
     def __str__(self):
-        return 'Model Error'
+        return 'Model Error: '+self.message
             
         
 class DynamicSystem:
@@ -290,7 +290,7 @@ class DynamicSystem:
         
         if G2!=[]:
             print(G2)
-            raise ModelError
+            raise ModelError('Overconstrained variables')
     
         
         G3=sinks[:]
@@ -300,7 +300,7 @@ class DynamicSystem:
                     G3.append(node2)
 
         if G3!=[]:
-            raise ModelError
+            raise ModelError('Underconstrained variables')
     
 #        vars_resolvables=[]
 #        for var in vars_resoudre: 
@@ -382,29 +382,77 @@ class DynamicSystem:
         for variable in self.variables+self.signals:
             variable._InitValues(self.ns,self.ts,self.max_order)
 
+#==============================================================================
+#         Enhancement to do: defining functions out of loop (copy args)s
+#==============================================================================
         for it,t in enumerate(self.t[1:]):           
             for neqs,equations,variables in order:
                 if neqs==1:
                     equations[0][0].Solve(it+self.max_order+1,self.ts)
                 else:
-                    x0=np.zeros(neqs)
+#                    x0=np.zeros(neqs)
+                    x0=[equations[i][0].outputs[equations[i][1]]._values[it+self.max_order] for i in range(len(equations))]
 #                    print('===========')
-                    def f(x):
+                    def r(x,equations=equations[:]):
                         # Writing variables values proposed by optimizer
                         for i,xi in enumerate(x):
                             equations[i][0].outputs[equations[i][1]]._values[it+self.max_order+1]=xi
 
                         # Computing regrets
                         r=[]
+#                        s=0
                         for ieq,(block,neq) in enumerate(equations):
 #                            print(block,it)
 #                            print(block.Evaluate(it+self.max_order+1,self.ts).shape)
 #                            print(block.Evaluate(it+self.max_order+1,self.ts),block)
                             r.append(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(block)
+#                            print('xproposed:',x[ieq])
+#                            print('block eval',block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print('value', x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            s+=abs(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
 #                            print(x[ieq],block.Evaluate(it+self.max_order+1,self.ts)[neq])
                         return r
-                    x=fsolve(f,x0)
-#                    print(x,f(x))
+                    def f(x,equations=equations[:]):
+                        # Writing variables values proposed by optimizer
+                        for i,xi in enumerate(x):
+                            equations[i][0].outputs[equations[i][1]]._values[it+self.max_order+1]=xi
+
+                        # Computing regrets
+#                        r=[]
+                        s=0
+                        for ieq,(block,neq) in enumerate(equations):
+#                            print(block,it)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts).shape)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts),block)
+#                            r.append(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+                            s+=abs(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(x[ieq],block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                        return r
+                        return s
+                    
+                    x,d,i,m=fsolve(r,x0,full_output=True)
+#                    res=root(f,x0,method='anderson')
+#                    x=res.x
+#                    res=minimize(f,x0,method='powell')
+                    print(r(x))
+#                    print(f(res.x),res.fun)
+#                    f(x)
+#                    print(r)
+                    if i!=1:
+                        print('fail')
+                        options={'tolfun':1e-3,'verbose':-9,'ftarget':1e-3}
+                        res=cma.fmin(f,x0,1,options=options)
+                        print(f(res[0]),r(res[0]))
+#                        print(equations)
+                        
+#                        print(m)
+#                    if res.fun>1e-3:
+#                        print('fail',res.fun)
+#                        options={'tolfun':1e-3,'verbose':-9}
+#                        res=cma.fmin(f,x0,1,options=options)
+#                    else:
+#                        print('ok')
                         
                     
                 

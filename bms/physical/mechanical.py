@@ -4,9 +4,9 @@
 """
 
 from bms import PhysicalNode,PhysicalBlock,Variable,np
-from bms.blocks.continuous import Sum,Gain,Subtraction,ODE,WeightedSum,Product,FunctionBlock
-from bms.blocks.nonlinear import Saturation
-from bms.signals.functions import Step
+from bms.blocks.continuous import Gain,ODE,WeightedSum,Product,FunctionBlock
+from bms.blocks.nonlinear import Saturation,Sign
+#from bms.signals.functions import Step
 
 class RotationalNode(PhysicalNode):
     def __init__(self,inertia,friction,name=''):
@@ -99,13 +99,13 @@ class Brake(PhysicalBlock):
 
 class Clutch(PhysicalBlock):     
     """
-    Simple clutch, must be improved with non linearity of equilibrium
+    Simple clutch
     """
-    def __init__(self,node1,node2,Tmax,name='Brake'):
+    def __init__(self,node1,node2,Tmax,name='Clutch'):
         occurence_matrix=np.array([[0,1,0,0],[0,1,0,1]])
         command=Variable('Clutch command')
         self.Tmax=Tmax
-        PhysicalBlock.__init__(self,[node1],[0],occurence_matrix,[command],name)
+        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[command],name)
 
     def PartialDynamicSystem(self,ieq,variable):
         """
@@ -114,13 +114,52 @@ class Clutch(PhysicalBlock):
         if ieq==0:
             # C1=-f*Tmax*sign(w1-w2)
             if variable==self.variables[0]:
-                return[Gain(self.commands[0],variable,-self.Tmax)]                
+                ut=Variable('unsigned clutch friction torque',hidden=True)
+                b1=Gain(self.commands[0],ut,self.Tmax)
+                dw=Variable('Delta rotationnal speed',hidden=True)
+                sdw=Variable('Sign of delta rotationnal speed')
+                b2=WeightedSum([self.physical_nodes[0].variable,self.physical_nodes[1].variable],dw,[-1,1])
+                b3=Sign(dw,sdw)
+                b4=Product(ut,sdw,variable)
+                return[b1,b2,b3,b4]                
         elif ieq==1:
             # C1=-C2
             if variable==self.variables[0]:
                 return [Gain(self.variables[1],variable,-1)]
             if variable==self.variables[1]:
                 return [Gain(self.variables[0],variable,-1)]
+
+class GearRatio(PhysicalBlock):     
+    """
+        Allow to model all components that impose a fixed ratio between two
+        rotational nodes such as gear sets
+    """
+    def __init__(self,node1,node2,ratio,name='Gear ratio'):
+        occurence_matrix=np.array([[1,0,1,0],[0,1,0,1]])
+        self.ratio=ratio
+        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
+
+    def PartialDynamicSystem(self,ieq,variable):
+        """
+        returns dynamical system blocks associated to output variable
+        """
+        if ieq==0:
+            # w2=Rw1
+            if variable==self.physical_nodes[0].variable:
+                # w1=w2/R
+                return[Gain(self.physical_nodes[1].variable,variable,1/self.ratio)]                
+            elif variable==self.physical_nodes[1].variable:
+                # w2=Rw1
+                return[Gain(self.physical_nodes[0].variable,variable,self.ratio)]                
+        elif ieq==1:
+            # C1=-RC2
+            if variable==self.variables[0]:
+                # C1=-RC2
+                return[Gain(self.variables[1],variable,-self.ratio)]                
+            elif variable==self.variables[1]:
+                # C2=-C1/R
+                return[Gain(self.variables[0],variable,-1/self.ratio)]                
+                
 
 class Wheel(PhysicalBlock):     
     """
@@ -138,11 +177,11 @@ class Wheel(PhysicalBlock):
         if ieq==0:
             # v=Rw
             if variable==self.physical_nodes[0].variable:
-                # v=rW
-                return[Gain(self.physical_nodes[1].variable,variable,self.wheels_radius)]                
+                # W=V/r
+                return[Gain(self.physical_nodes[1].variable,variable,1/self.wheels_radius)]                
             elif variable==self.physical_nodes[1].variable:
-                # w=v/R
-                return[Gain(self.physical_nodes[0].variable,variable,1/self.wheels_radius)]                
+                # V=rw
+                return[Gain(self.physical_nodes[0].variable,variable,self.wheels_radius)]                
         elif ieq==1:
             # C=-FR
             if variable==self.variables[0]:
