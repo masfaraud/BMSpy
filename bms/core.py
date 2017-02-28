@@ -385,6 +385,8 @@ class DynamicSystem:
 #==============================================================================
 #         Enhancement to do: defining functions out of loop (copy args)s
 #==============================================================================
+#        print(order)
+        residue=[]
         for it,t in enumerate(self.t[1:]):           
             for neqs,equations,variables in order:
                 if neqs==1:
@@ -426,34 +428,44 @@ class DynamicSystem:
 #                            print(block.Evaluate(it+self.max_order+1,self.ts).shape)
 #                            print(block.Evaluate(it+self.max_order+1,self.ts),block)
 #                            r.append(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(block)
                             s+=abs(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
 #                            print(x[ieq],block.Evaluate(it+self.max_order+1,self.ts)[neq])
 #                        return r
+#                        print(s)
                         return s
                     
-                    x,d,i,m=fsolve(r,x0,full_output=True)
+#                    x,d,i,m=fsolve(r,x0,full_output=True)
 #                    res=root(f,x0,method='anderson')
 #                    x=res.x
-#                    res=minimize(f,x0,method='powell')
-                    print(r(x))
+                    res=minimize(f,x0,method='powell')
+                    if res.fun>1e-3:
+                        x0=[equations[i][0].outputs[equations[i][1]]._values[it+self.max_order] for i in range(len(equations))]
+                        x0+=np.random.random(len(equations))
+                        print('restart')
+                        res=minimize(f,x0,method='powell')
+                        
+                    residue.append(f(res.x))
+#                    print(r(x),i)
 #                    print(f(res.x),res.fun)
 #                    f(x)
 #                    print(r)
-                    if i!=1:
-                        print('fail')
-                        options={'tolfun':1e-3,'verbose':-9,'ftarget':1e-3}
-                        res=cma.fmin(f,x0,1,options=options)
-                        print(f(res[0]),r(res[0]))
+#                    if i!=1:
 #                        print(equations)
-                        
-#                        print(m)
-#                    if res.fun>1e-3:
-#                        print('fail',res.fun)
-#                        options={'tolfun':1e-3,'verbose':-9}
+#                        print(i,r(x))
+#                        options={'tolfun':1e-3,'verbose':-9,'ftarget':1e-3}
 #                        res=cma.fmin(f,x0,1,options=options)
-#                    else:
-#                        print('ok')
-                        
+#                        print(f(res[0]),r(res[0]))
+##                        print(equations)
+#                        
+##                        print(m)
+##                    if res.fun>1e-3:
+##                        print('fail',res.fun)
+##                        options={'tolfun':1e-3,'verbose':-9}
+##                        res=cma.fmin(f,x0,1,options=options)
+##                    else:
+##                        print('ok')
+        return residue
                     
                 
 

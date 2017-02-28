@@ -33,7 +33,7 @@ st2=bms.Variable(('Sum torques on 2','st2'))
 
 b1=Gain(cc,tc,Cmax)
 b2=WeightedSum([w1,w2],dw12,[1,-1])
-b3=CoulombVariableValue(it,dw12,tc,ct,0.2)
+b3=CoulombVariableValue(it,dw12,tc,ct,1)
 #b3=Coulomb(it,dw12,ct,150)
 
 b4=ODE(st1,w1,[1],[fv1,I1])
@@ -41,7 +41,7 @@ b5=ODE(st2,w2,[1],[fv2,I2])
 b6=WeightedSum([it,ct],st1,[1,1])
 b7=WeightedSum([rt,ct],st2,[1,-1])
 
-ds=bms.DynamicSystem(50,20,[b1,b2,b3,b4,b5,b6,b7])
+ds=bms.DynamicSystem(50,150,[b1,b2,b3,b4,b5,b6,b7])
 
 
 #ds.DrawModel()

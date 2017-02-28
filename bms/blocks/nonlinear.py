@@ -117,22 +117,26 @@ class CoulombVariableValue(Block):
         Return coulomb force under condition of speed and sum of forces (input)
         The max value is driven by an input
     """
-    def __init__(self,input_variable,speed_variable,value_variable,output_variable,tolerance=0):
-        Block.__init__(self,[input_variable,speed_variable,value_variable],[output_variable],1,0)
+    def __init__(self,external_force,speed_variable,value_variable,output_variable,tolerance=0):
+        Block.__init__(self,[external_force,speed_variable,value_variable],[output_variable],1,0)
 #        self.max_value=max_value
         self.tolerance=tolerance
 
     def Evaluate(self,it,ts):
-        input_value,speed,max_value=self.InputValues(it)
+        external_force,speed,max_value=self.InputValues(it)
+        # Slipping
         if speed>self.tolerance:
             output=-max_value
         elif speed<-self.tolerance:
             output=max_value
         else:
-            if abs(input_value)<max_value:
-                output=-input_value
+            # locked
+            if abs(external_force)<max_value:
+                # equilibrium
+                output=-external_force
             else:
-                if input_value<0:
+                # Breaking equilibrium
+                if external_force<0:
                     output=max_value
                 else:
                     output=-max_value
@@ -140,6 +144,40 @@ class CoulombVariableValue(Block):
         
     def LabelBlock(self):
         return 'Clb Var'
+    
+class RegCoulombVariableValue(Block):
+    """
+        Return coulomb force under condition of speed and sum of forces (input)
+        The max value is driven by an input
+    """
+    def __init__(self,external_force,speed_variable,value_variable,output_variable,tolerance=0):
+        Block.__init__(self,[external_force,speed_variable,value_variable],[output_variable],1,0)
+#        self.max_value=max_value
+        self.tolerance=tolerance
+
+    def Evaluate(self,it,ts):
+        external_force,speed,max_value=self.InputValues(it)
+        # Slipping
+        if speed>self.tolerance:
+            output=-max_value
+        elif speed<-self.tolerance:
+            output=max_value
+        else:
+            # locked
+            if abs(external_force)<max_value:
+                # equilibrium
+                output=-external_force
+            else:
+                # Breaking equilibrium
+                if external_force<0:
+                    output=max_value
+                else:
+                    output=-max_value
+        return output
+        
+    def LabelBlock(self):
+        return 'Clb Var'
+
 
 
 class Sign(Block):
