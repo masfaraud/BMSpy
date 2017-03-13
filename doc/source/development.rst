@@ -10,10 +10,24 @@ Release Notes
 
 see also releases on github: https://github.com/masfaraud/BMSpy/releases
 
+
 Version 0.0
 ^^^^^^^^^^^
 
 This is the alpha version. Code standards change rapidely, and compatibility is  this version is not guarentied.
+
+Version 0.0.8
+~~~~~~~~~~~~~
+
+
+ * Physical modeling in order to generate automaticaly dynamic systems from physical components layout.
+
+ * Solver major improvement: loops in dynamic system are solved as a system of equations with an optimizer.
+
+
+Version 0.0.7
+~~~~~~~~~~~~~
+Minor changes
 
 Version 0.0.6
 ~~~~~~~~~~~~~

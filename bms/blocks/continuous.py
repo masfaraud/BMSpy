@@ -6,20 +6,22 @@ Collection of continuous blocks
 
 
 #from ..blocks import Block
-from bms import Block,np,math
+from bms import Block,np
+import math
 
 
 class Gain(Block):
     """
-        output=value* input    
+        output=value* input + offset   
     """
-    def __init__(self,input_variable,output_variable,value):
+    def __init__(self,input_variable,output_variable,value,offset=0):
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.value=value
+        self.offset=offset
 
-    def Solve(self,it,ts):
-        self.outputs[0]._values[it]=self.value*self.InputValues(it)[0]
-        
+    def Evaluate(self,it,ts):
+        return self.value*self.InputValues(it)[0]+self.offset
+
     def LabelBlock(self):
         return str(self.value)
 
@@ -29,20 +31,42 @@ class Gain(Block):
 
 class Sum(Block):
     """
-        output=input1+input2    
+        output=\sum inputs    
     """
-    def __init__(self,input_variable1,input_variable2,output_variable):
-        Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
-
-    def Solve(self,it,ts):
-        self.outputs[0]._values[it]=np.dot(np.ones(2),self.InputValues(it))
-
+    def __init__(self,inputs,output_variable):
+        Block.__init__(self,inputs,[output_variable],1,0)
+        
+    def Evaluate(self,it,ts):
+        return np.array([np.sum(self.InputValues(it))])
+        
     def LabelBlock(self):
-        return ''
+        return '+'
 
     def LabelConnections(self):
         return ['+','+']
 
+class WeightedSum(Block):
+    """
+        Defines a weighted sum over inputs
+        output=\sum w_i * input_i    
+    """
+    def __init__(self,inputs,output_variable,weights,offset=0):
+        Block.__init__(self,inputs,[output_variable],1,0)
+        self.weights=weights
+        self.offset=offset
+        
+    def Evaluate(self,it,ts):
+
+        value=np.dot(self.weights,self.InputValues(it))+self.offset
+        return value
+
+    def LabelBlock(self):
+        return 'W+'+str(self.weights)
+
+    def LabelConnections(self):
+        return self.weights
+
+        
 class Subtraction(Block):
     """
         output=input1-input2    
@@ -50,11 +74,11 @@ class Subtraction(Block):
     def __init__(self,input_variable1,input_variable2,output_variable):
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
-    def Solve(self,it,ts):
-        self.outputs[0]._values[it]=np.dot(np.array([1,-1]),self.InputValues(it))   
+    def Evaluate(self,it,ts):
+        return np.dot(np.array([1,-1]),self.InputValues(it))  
         
     def LabelBlock(self):
-        return ''
+        return '-'
 
     def LabelConnections(self):
         return ['+','-']
@@ -68,9 +92,9 @@ class Product(Block):
 
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
-    def Solve(self,it,ts):
+    def Evaluate(self,it,ts):
         value1,value2=self.InputValues(it)
-        self.outputs[0]._values[it]=value1*value2
+        return np.array([value1*value2])
 
     def LabelBlock(self):
         return 'x'
@@ -86,9 +110,10 @@ class Division(Block):
 
         Block.__init__(self,[input_variable1,input_variable2],[output_variable],1,0)
 
-    def Solve(self,it,ts):
+    def Evaluate(self,it,ts):
+
         value1,value2=self.InputValues(it)
-        self.outputs[0]._values[it]=value1/value2
+        return value1/value2
 
     def LabelBlock(self):
         return '/'
@@ -141,11 +166,18 @@ class ODE(Block):
             self._M[delta_t]=(Mi,Mo)
         return Mi,Mo
         
-    def Solve(self,it,ts):
+    def Evaluate(self,it,ts):
+
         Mi,Mo=self.OutputMatrices(ts)
         # Solve at time t with time step ts
-        self.outputs[0]._values[it]=np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T)
-        
+#        print(Mi,Mo)
+#        print(np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T))
+#        if abs(np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T))>10000:
+#        print(Mi,self.InputValues(it),Mo,self.OutputValues(it))
+#            print(np.dot(Mi,self.InputValues(it).T))
+#            print(np.dot(Mo,self.OutputValues(it).T))
+        return np.dot(Mi,self.InputValues(it).T)+np.dot(Mo,self.OutputValues(it).T)
+
     def LabelBlock(self):
         return str(self.a)+'\n'+str(self.b)
 
@@ -162,8 +194,8 @@ class FunctionBlock(Block):
         Block.__init__(self,[input_variable],[output_variable],1,0)
         self.function=function
 
-    def Solve(self,it,ts):
-        self.outputs[0]._values[it]=self.function(self.InputValues(it)[0])
+    def Evaluate(self,it,ts):
+        return np.array([self.function(self.InputValues(it)[0])])
 
     def LabelBlock(self):
         return 'f(t)'
@@ -180,7 +212,7 @@ class FunctionBlock(Block):
 #        Block.__init__(self,[input_variable],[output_variable],1,0)
 #        self.function=function
 #
-#    def Solve(self,it,ts):
+#    def Evaluate(self,it,ts):
 #        self.outputs[0]._values[it]=self.function(self.InputValues(it)[0])
 #
 #    def Label(self):

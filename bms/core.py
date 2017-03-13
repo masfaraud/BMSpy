@@ -7,10 +7,13 @@ This file defines the base of BMS.
 """
 
 import numpy as np
+#import numpy.random
 import matplotlib.pyplot as plt
-import math
+#import math
 import networkx as nx
 import dill
+from scipy.optimize import fsolve,root,minimize
+import cma
 
 class Variable:
     """ Defines a variable
@@ -18,9 +21,9 @@ class Variable:
     :param names: Defines full name and short name.
     If names is a string the two names will be identical
     otherwise names should be a tuple of strings (full_name,short_name) 
-    
+    :param hidden: inner variable to hide in plots if true
     """    
-    def __init__(self,names='',initial_values=[0]):
+    def __init__(self,names='variable',initial_values=[0],hidden=False):
         if type(names)==str:
             self.name=names
             self.short_name=names 
@@ -34,10 +37,11 @@ class Variable:
         self.initial_values=initial_values
         self._values=np.array([])
         self.max_order=0
+        self.hidden=hidden
     
     def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
-        self._values=np.zeros(ns+max_order+1)
+        self._values=self.initial_values[0]*np.ones(ns+max_order+1)
         self._ForwardValues()
             
     def _ForwardValues(self):
@@ -64,7 +68,7 @@ class Signal(Variable):
             
         self._values=np.array([])
         self.max_order=0
-        
+        self.hidden=False
         
     def _InitValues(self,ns,ts,max_order):
         self.max_order=max_order
@@ -74,6 +78,9 @@ class Signal(Variable):
         self._ForwardValues()
             
     def _ForwardValues(self):
+        """
+        Implementation for problems with derivative conditions on variables
+        """
         pass
 
     
@@ -121,34 +128,42 @@ class Block:
         if isinstance(variable,Variable):
             self.outputs.append(variable)
         else:
+            print(variable)
             raise TypeError
 
-    def InputValues(self,it):
+    def InputValues(self,it,nsteps=None):
         """
             Returns the input values at a given iteration for solving the block outputs
         """
+        if nsteps==None:
+            nsteps=self.max_input_order
 #        print(self,it)
         # Provides values in inputs values for computing at iteration it
-        I=np.zeros((self.n_inputs,self.max_input_order))
+        I=np.zeros((self.n_inputs,nsteps))
         for iv,variable in enumerate(self.inputs):
 #            print(it-self.max_input_order+1,it+1)            
 #            print(variable._values[it-self.max_input_order+1:it+1])
-            I[iv,:]=variable._values[it-self.max_input_order+1:it+1]
+            I[iv,:]=variable._values[it-nsteps+1:it+1]
         return I
             
-    def OutputValues(self,it):
+    def OutputValues(self,it,nsteps=None):
         # Provides values in inputs values for computing at iteration it
-        O=np.zeros((self.n_outputs,self.max_output_order))
+        if nsteps==None:
+            nsteps=self.max_output_order
+        O=np.zeros((self.n_outputs,nsteps))
         for iv,variable in enumerate(self.outputs):
-            O[iv,:]=variable._values[it-self.max_output_order:it]
+            O[iv,:]=variable._values[it-nsteps:it]
         return O
+                
+    def Solve(self,it,ts):
+        self.outputs[0]._values[it]=self.Evaluate(it,ts)
 
 class ModelError(Exception):
-    def __init__(self):
-        pass
-    
+    def __init__(self,message):
+        self.message=message
+
     def __str__(self):
-        return 'Model Error'
+        return 'Model Error: '+self.message
             
         
 class DynamicSystem:
@@ -187,6 +202,7 @@ class DynamicSystem:
             for variable in block.inputs+block.outputs:
                 self._AddVariable(variable)
         else:
+            print(block)
             raise TypeError
         self._utd_graph=False
         
@@ -195,7 +211,7 @@ class DynamicSystem:
         Add a variable to the model. Should not be used by end-user
         """
         if isinstance(variable,Signal):
-            if not variable in self.variables:
+            if not variable in self.signals:
                 self.signals.append(variable)
         elif isinstance(variable,Variable):
             if not variable in self.variables:
@@ -209,9 +225,9 @@ class DynamicSystem:
             # Generate graph
             self._graph=nx.DiGraph()
             for variable in self.variables:
-                self._graph.add_node(variable)
+                self._graph.add_node(variable,bipartite=0)
             for block in self.blocks:
-                self._graph.add_node(block)
+                self._graph.add_node(block,bipartite=1)
                 for variable in block.inputs:
                     self._graph.add_edge(variable,block)
                 for variable in block.outputs:
@@ -224,128 +240,239 @@ class DynamicSystem:
     graph=property(_get_Graph)
     
         
-    def _ResolutionOrder(self):
-        """
-        Finds the blocks resolution order. Should not be used by end-user
-        """
-        known_variables=self.signals[:]
-        resolution_order=[]
-        half_known_variables=[]
-        half_solved_blocks={}
-        unsolved_blocks=self.blocks[:]
-        graph_loops=list(nx.simple_cycles(self.graph))
-#        print(graph_loops)
-        while len(known_variables)<(len(self.variables)+len(self.signals)):
-            block_solved=False
-            # Check if a block out of remaining is solvable
-            # ie if all inputs are known of half known
-            for block in unsolved_blocks:
-                solved_input_variables=[]
-                half_solved_input_variables=[]
-                unsolved_input_variables=[]
-                for variable in block.inputs:
-                    if variable in known_variables:
-                        solved_input_variables.append(variable)
-                    elif variable in half_known_variables:
-                        half_solved_input_variables.append(variable)
-                    else:
-                        unsolved_input_variables.append(variable)
-                        
-                
-                if unsolved_input_variables==[]:
-                    if solved_input_variables!=[]:
-                        resolution_order.append(block)
-                        unsolved_blocks.remove(block)
-                        block_solved=True
-                        for variable in block.outputs:
-                            if not variable in known_variables:
-                                known_variables.append(variable)
-                        break
-            if not block_solved:
-                # A block with inputs partially can half solve its outputs
-                
-                # Each block is assigned a score
-                # defined by the ratio of already knowns variables
-                scores={}
-                for block in unsolved_blocks:
-                    score=0
-                    # counting variables
-                    for variable in block.inputs:
-                        if variable in known_variables:
-                            score+=2# helps propagating information
-                        elif variable in half_known_variables:
-                            score+=0.5
-                        else:
-                            # Variable not even half known.
-                            # It has to be part of a loop to be solve                        
-                            in_loop=False
-                            for loop in graph_loops:
-                                if (block in loop)&(variable in loop):
-                                    in_loop=True
-                            if not in_loop:
-                                score=0
-                                break
-                    try:
-                        max_score_block=half_solved_blocks[block]                                        
-                    except:
-                        max_score_block=0
-                    if score>max_score_block:
-                        scores[block]=score
-                if scores!={}:
-                    max_score=0
-                    for block,score in scores.items():
-                        if score>max_score:
-                            max_score=score
-                            max_block=block
-                            
-                    # Half solve block
-                    resolution_order.append(max_block)
-                    half_solved_blocks[max_block]=max_score
-                    for variable in max_block.outputs:
-                        if not variable in known_variables+half_known_variables:
-                            half_known_variables.append(variable)
-
-                else:
-                    raise NotImplemented
-                    
-                             
-        return resolution_order 
         
-        
-        
-    def CheckModelConsistency(self):
+    def _ResolutionOrder(self,variables_to_solve):
         """
-        Check for model consistency:
-            - an input variable can't be set as the output of a block
-            - a variable can't be the output of more than one block
-             
+        return a list of lists of tuples (block,output,ndof) to be solved
+        
         """
-        for variable in self.signals:
-            if self.graph.predecessors(variable)!=[]:
-                raise ModelError
+#    Gp=nx.DiGraph()
+#
+#    for i in range(nvar):
+#        Gp.add_node('v'+str(i),bipartite=0)
+#    
+#    for i in range(neq):
+#        Gp.add_node('e'+str(i),bipartite=1)
+#        for j in range(nvar):
+#            if Mo[i,j]==1:
+#                Gp.add_edge('e'+str(i),'v'+str(j))
+            
+        
+        Gp=nx.DiGraph()
         for variable in self.variables:
-            if len(self.graph.predecessors(variable))>1:
-                raise ModelError
+            Gp.add_node(variable,bipartite=0)
+        for block in self.blocks:
+            for iov,output_variable in enumerate(block.outputs):
+                Gp.add_node((block,iov),bipartite=1)
+                Gp.add_edge((block,iov),output_variable)
+                Gp.add_edge(output_variable,(block,iov))
+                for input_variable in block.inputs:
+                    if not isinstance(input_variable,Signal):
+                        Gp.add_edge(input_variable,(block,iov))
+        
+    #    for n1,n2 in M.items():
+    #        Gp.add_edge(n1,n2)        
+    
+        
+        sinks=[]
+        sources=[]
+        for node in Gp.nodes():
+            if Gp.out_degree(node)==0:
+                sinks.append(node)
+            elif Gp.in_degree(node)==0:
+                sources.append(node)
+        
+        G2=sources[:]
+        for node in sources:
+            for node2 in nx.descendants(Gp,node):
+                if node2 not in G2:
+                    G2.append(node2)
+        
+        if G2!=[]:
+            print(G2)
+            raise ModelError('Overconstrained variables')
+    
+        
+        G3=sinks[:]
+        for node in sinks:
+            for node2 in nx.ancestors(Gp,node):
+                if node2 not in G3:
+                    G3.append(node2)
+
+        if G3!=[]:
+            raise ModelError('Underconstrained variables')
+    
+#        vars_resolvables=[]
+#        for var in vars_resoudre: 
+#            if not 'v'+str(var) in G2+G3:
+#                vars_resolvables.append(var)
+                
+            
+#        G1=Gp.copy()
+#        G1.remove_nodes_from(G2+G3)
+#        
+#        M1=nx.bipartite.maximum_matching(G1)
+#        G1p=nx.DiGraph()
+#        
+#        G1p.add_nodes_from(G1.nodes())
+#        for e in G1.edges():
+#            # equation vers variable
+#            if e[0][0]=='v':
+#                G1p.add_edge(e[0],e[1])        
+#            else:
+#                G1p.add_edge(e[1],e[0])   
+#    #    print(len(M))
+#        for n1,n2 in M1.items():
+#    #        print(n1,n2)
+#            if n1[0]=='e':
+#                G1p.add_edge(n1,n2)        
+#            else:
+#                G1p.add_edge(n2,n1)        
+                
+            
+        scc=list(nx.strongly_connected_components(Gp))
+    #    pos=nx.spring_layout(G1p)
+    #    plt.figure()
+    #    nx.draw(G1p,pos)
+    #    nx.draw_networkx_labels(G1p,pos)
+#        print(scc)
+        if scc!=[]:
+            C=nx.condensation(Gp,scc)
+            isc_vars=[]
+            for isc,sc in enumerate(scc):
+                for var in variables_to_solve:
+                    if var in sc:
+                        isc_vars.append(isc)
+                        break
+            ancestors_vars=isc_vars[:]
+            
+            for isc_var in isc_vars:                                
+                for ancetre in nx.ancestors(C,isc_var):
+                    if ancetre not in ancestors_vars:
+                        ancestors_vars.append(ancetre)
+                    
+            order_sc=[sc for sc in nx.topological_sort(C,reverse=False) if sc in ancestors_vars]
+            order_ev=[]
+            for isc in order_sc:            
+                evs=list(scc[isc])# liste d'équations et de variables triées pour être séparées
+#                print(evs)
+#                levs=int(len(evs)/2)
+                eqs=[]
+                var=[]
+                for element in evs:
+                    if type(element)==tuple:
+                        eqs.append(element)
+                    else:
+                        var.append(element)
+                order_ev.append((len(eqs),eqs,var))
+                
+            return order_ev
+            
+        raise ModelError
+    
+    
                             
-    def Simulate(self):
-        self.CheckModelConsistency()
-        resolution_order=self._ResolutionOrder()
+    def Simulate(self,variables_to_solve=None):
+        if variables_to_solve==None:
+            variables_to_solve=[variable for variable in self.variables if not variable.hidden]
+        
+        order=self._ResolutionOrder(variables_to_solve)
+
         # Initialisation of variables values
         for variable in self.variables+self.signals:
-#            if not isinstance(variable,Input):
             variable._InitValues(self.ns,self.ts,self.max_order)
-#            else:
-#                variable.Values(self.ns,self.ts,self.max_order)
+
+#==============================================================================
+#         Enhancement to do: defining functions out of loop (copy args)s
+#==============================================================================
+#        print(order)
+        residue=[]
         for it,t in enumerate(self.t[1:]):           
-#            print('iteration step/time: ',it,t,'/',it+self.max_order+1)
-            for block in resolution_order:
-#                print('write @ ',it+self.max_order)
-                block.Solve(it+self.max_order+1,self.ts)
-#                print(block)
+            for neqs,equations,variables in order:
+                if neqs==1:
+                    equations[0][0].Solve(it+self.max_order+1,self.ts)
+                else:
+#                    x0=np.zeros(neqs)
+                    x0=[equations[i][0].outputs[equations[i][1]]._values[it+self.max_order] for i in range(len(equations))]
+#                    print('===========')
+                    def r(x,equations=equations[:]):
+                        # Writing variables values proposed by optimizer
+                        for i,xi in enumerate(x):
+                            equations[i][0].outputs[equations[i][1]]._values[it+self.max_order+1]=xi
+
+                        # Computing regrets
+                        r=[]
+#                        s=0
+                        for ieq,(block,neq) in enumerate(equations):
+#                            print(block,it)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts).shape)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts),block)
+                            r.append(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(block)
+#                            print('xproposed:',x[ieq])
+#                            print('block eval',block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print('value', x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            s+=abs(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(x[ieq],block.Evaluate(it+self.max_order+1,self.ts)[neq])
+                        return r
+                    def f(x,equations=equations[:]):
+                        # Writing variables values proposed by optimizer
+                        for i,xi in enumerate(x):
+                            equations[i][0].outputs[equations[i][1]]._values[it+self.max_order+1]=xi
+
+                        # Computing regrets
+#                        r=[]
+                        s=0
+                        for ieq,(block,neq) in enumerate(equations):
+#                            print(block,it)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts).shape)
+#                            print(block.Evaluate(it+self.max_order+1,self.ts),block)
+#                            r.append(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(block)
+                            s+=abs(x[ieq]-block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                            print(x[ieq],block.Evaluate(it+self.max_order+1,self.ts)[neq])
+#                        return r
+#                        print(s)
+                        return s
+                    
+#                    x,d,i,m=fsolve(r,x0,full_output=True)
+#                    res=root(f,x0,method='anderson')
+#                    x=res.x
+                    res=minimize(f,x0,method='powell')
+                    if res.fun>1e-3:
+                        x0=[equations[i][0].outputs[equations[i][1]]._values[it+self.max_order] for i in range(len(equations))]
+                        x0+=np.random.random(len(equations))
+                        print('restart')
+                        res=minimize(f,x0,method='powell')
+                        
+                    residue.append(f(res.x))
+#                    print(r(x),i)
+#                    print(f(res.x),res.fun)
+#                    f(x)
+#                    print(r)
+#                    if i!=1:
+#                        print(equations)
+#                        print(i,r(x))
+#                        options={'tolfun':1e-3,'verbose':-9,'ftarget':1e-3}
+#                        res=cma.fmin(f,x0,1,options=options)
+#                        print(f(res[0]),r(res[0]))
+##                        print(equations)
+#                        
+##                        print(m)
+##                    if res.fun>1e-3:
+##                        print('fail',res.fun)
+##                        options={'tolfun':1e-3,'verbose':-9}
+##                        res=cma.fmin(f,x0,1,options=options)
+##                    else:
+##                        print('ok')
+        return residue
+                    
+                
 
     def VariablesValues(self,variables,t): 
         """
-        Returns the value of given variables at time t
+        Returns the value of given variables at time t. 
+        Linear interpolation is performed between two time steps.
         
         :param variables: one variable or a list of variables
         :param t: time of evaluation
@@ -368,6 +495,7 @@ class DynamicSystem:
     def PlotVariables(self,subplots_variables=None):
         if subplots_variables==None:
             subplots_variables=[self.signals+self.variables]
+            subplots_variables=[[variable for variable in self.signals+self.variables if not variable.hidden]]
 #        plt.figure()
         fig,axs=plt.subplots(len(subplots_variables),sharex=True)
         if len(subplots_variables)==1:
@@ -410,3 +538,217 @@ def Load(file):
     with open(file,'rb') as file:
         model=dill.load(file)
         return model
+
+class PhysicalNode:
+    """
+    Abstract class
+    """
+    def __init__(self,cl_solves_potential,cl_solves_fluxes,node_name,potential_variable_name,flux_variable_name):
+        self.cl_solves_potential=cl_solves_potential
+        self.cl_solves_fluxes=cl_solves_fluxes
+        self.name=node_name
+        self.potential_variable_name=potential_variable_name
+        self.flux_variable_name=flux_variable_name
+        self.variable=Variable(potential_variable_name+' '+node_name)
+
+class PhysicalBlock:
+    """
+    Abstract class to inherit when coding a physical block
+    """
+    def __init__(self,physical_nodes,nodes_with_fluxes,occurence_matrix,commands,name):
+        self.physical_nodes=physical_nodes
+        self.name=name
+        self.nodes_with_fluxes=nodes_with_fluxes
+        self.occurence_matrix=occurence_matrix
+        self.commands=commands
+        self.variables=[Variable(physical_nodes[inode].flux_variable_name+' from '+physical_nodes[inode].name+' to '+self.name) for inode in nodes_with_fluxes]
+        
+class PhysicalSystem:
+    """
+    Defines a physical system
+    """
+    def __init__(self,te,ns,physical_blocks,command_blocks):
+        self.te=te
+        self.ns=ns
+        self.physical_blocks=[]        
+        self.physical_nodes=[]
+        self.variables=[]
+        self.command_blocks=[]
+        for block in physical_blocks:
+            self.AddPhysicalBlock(block)
+
+        for block in command_blocks:
+            self.AddCommandBlock(block)
+            
+        self._utd_ds=False
+
+    def AddPhysicalBlock(self,block):
+        if isinstance(block,PhysicalBlock):
+            self.physical_blocks.append(block)
+            for node in block.physical_nodes:
+                self._AddPhysicalNode(node)
+        else:
+            raise TypeError
+        self._utd_ds=False
+
+        
+    def _AddPhysicalNode(self,node):
+        if isinstance(node,PhysicalNode):
+            if not node in self.physical_nodes:
+                self.physical_nodes.append(node)
+        self._utd_ds=False        
+
+    def AddCommandBlock(self,block):
+        if isinstance(block,Block):
+            self.command_blocks.append(block)
+            for variable in block.inputs+block.outputs:
+                self._AddVariable(variable)
+        else:
+            raise TypeError
+        self._utd_ds=False
+
+        
+    def _AddVariable(self,variable):
+        if isinstance(variable,Variable):
+            if not variable in self.variables:
+                self.variables.append(variable)
+        self._utd_ds=False        
+
+        
+    def GenerateDynamicSystem(self):
+#        from bms.blocks.continuous import WeightedSum
+        G=nx.Graph()
+#        variables={}
+        # Adding node variables
+        for node in self.physical_nodes:
+            G.add_node(node.variable,bipartite=0)
+        for block in self.physical_blocks:
+#            print(block.variables)
+            for variable in block.variables:
+                # add variable realted to connection
+                G.add_node(node.variable,bipartite=0)
+            ne,nv=block.occurence_matrix.shape  
+#            print(block,block.occurence_matrix)              
+            # Add equations of blocs
+            for ie in range(ne): 
+                G.add_node((block,ie),bipartite=1)
+                for iv in range(nv):
+#                    print(iv)
+                    if block.occurence_matrix[ie,iv]==1:
+                        if iv%2==0:
+                            G.add_edge((block,ie),block.physical_nodes[iv//2].variable)
+                        else:
+                            G.add_edge((block,ie),block.variables[iv//2])
+        # Adding equation of physical nodes: conservative law of node from its occurence matrix
+        # Restricted to nodes to which are brought fluxes
+        for node in self.physical_nodes:            
+            # linking conservative equation of flux to potential if 
+            if node.cl_solves_potential:
+                G.add_edge(node,node.variable)
+            if node.cl_solves_fluxes:
+                # Linking fluxes of node
+                G.add_node(node,bipartite=1)
+                for block in self.physical_blocks:
+                    for inb in block.nodes_with_fluxes:
+    #                    print(block,block.physical_nodes[inb].name)
+                        node_block=block.physical_nodes[inb]
+                        if node==node_block:
+                            G.add_edge(node,block.variables[block.nodes_with_fluxes.index(inb)])
+    #                        print(node_block,block.variables[inb].name)
+                        
+        G2=nx.DiGraph()
+        G2.add_nodes_from(G)
+        eq_out_var={}
+        for e in nx.bipartite.maximum_matching(G).items():
+#            print(e[0].__class__.__name__)
+            # eq -> variable
+            if e[0].__class__.__name__=='Variable':       
+                G2.add_edge(e[1],e[0])
+                eq_out_var[e[1]]=e[0]
+            else:
+                G2.add_edge(e[0],e[1])
+                eq_out_var[e[0]]=e[1]
+                
+        for e in G.edges():
+            if e[0].__class__.__name__=='Variable':         
+                G2.add_edge(e[0],e[1])
+            else:
+                G2.add_edge(e[1],e[0])
+#        print('@@@@@@@@@@@@@@@@@@@@@@@@')
+
+        ## Draw graph for debug
+#        pos=nx.spring_layout(G)
+#        nx.draw(G,pos)       
+#        names={}
+#        for node in G.nodes():
+#            if type(node)==tuple:
+#                names[node]=(node[0].name,node[1])
+#            else:
+#                names[node]=node.name
+#        nx.draw_networkx_labels(G,pos,names)
+        
+        sinks=[]
+        sources=[]    
+        for node in G2.nodes():
+            if G2.out_degree(node)==0:
+                sinks.append(node)
+            elif G2.in_degree(node)==0:
+                sources.append(node)
+#        print(sinks,sources)
+        
+        if sinks!=[]:
+            print(sinks)
+            raise ModelError
+        if sources!=[]:
+            print(sources)
+            raise ModelError
+            
+        # Model is solvable: it must say to equations of blocks which is their 
+        # output variable
+        
+#        print(eq_out_var)
+        model_blocks=[]
+        for block_node,variable in eq_out_var.items():
+#            print(block_node,variable)
+            if type(block_node)==tuple:
+                # Blocks writes an equation
+                model_blocks.extend(block_node[0].PartialDynamicSystem(block_node[1],variable))
+            else:
+                # Sum of incomming variables at nodes
+                # searching attached nodes
+                variables=[]
+                for block in self.physical_blocks:
+                    try:
+#                        print(block)
+                        ibn=block.physical_nodes.index(block_node)
+#                        print(ibn)
+                        if ibn in block.nodes_with_fluxes:
+                            variable2=block.variables[ibn]
+                            if variable2!=variable:
+                                variables.append(variable2)
+                    except ValueError:
+                        pass
+#                print('v: ',variables,variable)
+#                v1=Variable()
+#                print('lv',len(variables))
+
+#                model_blocks.append(WeightedSum(variables,variable,[-1]*len(variables)))
+                model_blocks.extend(block_node.ConservativeLaw(variables,variable))
+
+                #                model_blocks.append(Gain(v1,variable,-1))
+                
+#        print(model_blocks)
+        model_blocks.extend(self.command_blocks)
+        return DynamicSystem(self.te,self.ns,model_blocks)
+        
+    def _get_ds(self):
+        if not self._utd_ds:
+            self._dynamic_system=self.GenerateDynamicSystem()
+            self._utd_ds=True
+        return self._dynamic_system    
+
+    dynamic_system=property(_get_ds)       
+        
+    def Simulate(self):
+        self.dynamic_system.Simulate()
+                

@@ -11,7 +11,8 @@ Contents:
 .. toctree::
 
    getting_started
-   tutorial
+   tutorial_dynamic
+   tutorial_physical
    development
    reference
 
