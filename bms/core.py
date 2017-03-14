@@ -435,17 +435,22 @@ class DynamicSystem:
 #                        print(s)
                         return s
                     
-#                    x,d,i,m=fsolve(r,x0,full_output=True)
+                    x,d,i,m=fsolve(r,x0,full_output=True)
 #                    res=root(f,x0,method='anderson')
 #                    x=res.x
-                    res=minimize(f,x0,method='powell')
-                    if res.fun>1e-3:
-                        x0=[equations[i][0].outputs[equations[i][1]]._values[it+self.max_order] for i in range(len(equations))]
-                        x0+=np.random.random(len(equations))
-                        print('restart')
-                        res=minimize(f,x0,method='powell')
-                        
-                    residue.append(f(res.x))
+
+
+#                    res=minimize(f,x0,method='powell')
+#                    if res.fun>1e-3:
+#                        x0=[equations[i][0].outputs[equations[i][1]]._values[it+self.max_order] for i in range(len(equations))]
+#                        x0+=np.random.random(len(equations))
+#                        print('restart')
+#                        res=minimize(f,x0,method='powell')
+#                        
+#                    residue.append(f(res.x))
+
+
+
 #                    print(r(x),i)
 #                    print(f(res.x),res.fun)
 #                    f(x)
@@ -465,7 +470,7 @@ class DynamicSystem:
 ##                        res=cma.fmin(f,x0,1,options=options)
 ##                    else:
 ##                        print('ok')
-        return residue
+#        return residue
                     
                 
 
