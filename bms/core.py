@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import dill
 from scipy.optimize import fsolve,root,minimize
-import cma
+#import cma
 
 class Variable:
     """ Defines a variable
