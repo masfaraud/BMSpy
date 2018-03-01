@@ -27,7 +27,7 @@ setup(name='bms',
       author='Steven Masfaraud',
       author_email='steven@masfaraud.fr',
       license='Creative Commons Attribution-Share Alike license',
-      packages=['bms','bms.blocks','bms.signals'],
+      packages=['bms','bms.blocks','bms.signals','bms.physical'],
       package_dir={'bms':'bms'},
       install_requires=['numpy','matplotlib>=2.0','networkx','dill'],
       classifiers=['Topic :: Scientific/Engineering','Development Status :: 3 - Alpha'])
