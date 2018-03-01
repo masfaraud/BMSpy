@@ -351,7 +351,7 @@ class DynamicSystem:
                     if ancetre not in ancestors_vars:
                         ancestors_vars.append(ancetre)
                     
-            order_sc=[sc for sc in nx.topological_sort(C,reverse=False) if sc in ancestors_vars]
+            order_sc=[sc for sc in nx.topological_sort(C) if sc in ancestors_vars]
             order_ev=[]
             for isc in order_sc:            
                 evs=list(scc[isc])# liste d'équations et de variables triées pour être séparées
@@ -661,6 +661,19 @@ class PhysicalSystem:
                             G.add_edge(node,block.variables[block.nodes_with_fluxes.index(inb)])
     #                        print(node_block,block.variables[inb].name)
                         
+#        # Draw graph for debug
+#        pos=nx.spring_layout(G)
+#        nx.draw(G,pos)       
+#        names={}
+#        for node in G.nodes():
+#            if type(node)==tuple:
+#                names[node]=(node[0].name,node[1])
+#            else:
+#                names[node]=node.name
+#        nx.draw_networkx_labels(G,pos,names)
+#        plt.show()
+
+
         G2=nx.DiGraph()
         G2.add_nodes_from(G)
         eq_out_var={}
@@ -681,16 +694,6 @@ class PhysicalSystem:
                 G2.add_edge(e[1],e[0])
 #        print('@@@@@@@@@@@@@@@@@@@@@@@@')
 
-        ## Draw graph for debug
-#        pos=nx.spring_layout(G)
-#        nx.draw(G,pos)       
-#        names={}
-#        for node in G.nodes():
-#            if type(node)==tuple:
-#                names[node]=(node[0].name,node[1])
-#            else:
-#                names[node]=node.name
-#        nx.draw_networkx_labels(G,pos,names)
         
         sinks=[]
         sources=[]    
