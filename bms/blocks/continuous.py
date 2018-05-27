@@ -4,10 +4,8 @@ Collection of continuous blocks
 
 """
 
-
-#from ..blocks import Block
-from bms import Block, np
-import math
+from bms import Block
+import numpy as np
 
 
 class Gain(Block):
@@ -154,16 +152,14 @@ class ODE(Block):
         n = len(self.a)
         A = np.zeros(n)
         for i, ai in enumerate(self.a):
-            Ae = [self.a[i]*(-1)**j*math.factorial(i)/math.factorial(j)/math.factorial(
-                i-j)/((delta_t)**i) for j in range(i+1)]  # Elementery A to assemblate in A
+            Ae = [self.a[i] * (-1)**j * np.factorial(i) / np.factorial(j) / np.factorial(i-j) / ((delta_t)**i) for j in range(i + 1)]  # Elementary A to assemblate in A
             for j, aej in enumerate(Ae):
                 A[j] += aej
 
         n = len(self.b)
         B = np.zeros(n)
         for i, ai in enumerate(self.b):
-            Be = [self.b[i]*(-1)**j*math.factorial(i)/math.factorial(j)/math.factorial(
-                i-j)/((delta_t)**i) for j in range(i+1)]  # Elementery A to assemblate in A
+            Be = [self.b[i] * (-1)**j * np.factorial(i) / np.factorial(j) / np.factorial(i-j) / ((delta_t)**i) for j in range(i + 1)]  # Elementary B to assemblate in B
             for j, bej in enumerate(Be):
                 B[j] += bej
 

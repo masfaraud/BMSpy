@@ -5,7 +5,8 @@ Collection of non-linear blocks
 """
 
 from bms import Block
-from numpy import array
+import numpy as np
+
 
 # class DeadZone(Block):
 #    """
@@ -77,7 +78,7 @@ class Saturation(Block):
             value = self.min_value
         elif value > self.max_value:
             value = self.max_value
-        return array([value])
+        return np.array([value])
 
     def LabelBlock(self):
         return 'Sat'
@@ -110,7 +111,7 @@ class Coulomb(Block):
                 else:
                     output = -self.max_value
 
-        return array([output])
+        return np.array([output])
 
     def LabelBlock(self):
         return 'Clb'
@@ -208,7 +209,7 @@ class Sign(Block):
         else:
             output = 0
 #        print(input_value,speed,output)
-        return array([output])
+        return np.array([output])
 
     def LabelBlock(self):
         return 'Sgn'
