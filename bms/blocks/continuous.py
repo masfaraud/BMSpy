@@ -6,11 +6,12 @@ Collection of continuous blocks
 
 from bms import Block
 import numpy as np
+from scipy.special import factorial
 
 
 class Gain(Block):
     """
-        output=value* input + offset   
+        output = value * input + offset   
     """
 
     def __init__(self, input_variable, output_variable, value, offset=0):
@@ -30,7 +31,7 @@ class Gain(Block):
 
 class Sum(Block):
     """
-        output=\sum inputs    
+        output = \sum inputs    
     """
 
     def __init__(self, inputs, output_variable):
@@ -49,7 +50,7 @@ class Sum(Block):
 class WeightedSum(Block):
     """
         Defines a weighted sum over inputs
-        output=\sum w_i * input_i    
+        output = \sum w_i * input_i    
     """
 
     def __init__(self, inputs, output_variable, weights, offset=0):
@@ -71,7 +72,7 @@ class WeightedSum(Block):
 
 class Subtraction(Block):
     """
-        output=input1-input2    
+        output = input1 - input2    
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -90,7 +91,7 @@ class Subtraction(Block):
 
 class Product(Block):
     """
-        output=input1*input2    
+        output = input1 * input2    
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -111,7 +112,7 @@ class Product(Block):
 
 class Division(Block):
     """
-        output=input1/input2    
+        output = input1 / input2    
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -133,10 +134,13 @@ class Division(Block):
 
 class ODE(Block):
     """
-        a,b are vectors of coefficients such as H, the transfert function of
+        a,b are vectors of coefficients such as H, the transfer function of
         the block, may be written as:
         H(p)=(a[i]p**i)/(b[j]p**j) (Einstein sum on i,j)
-        p is Laplace's variable 
+        p is Laplace's variable
+
+        For example, (a=[1], b=[0,1]) is an integration, and (a=[0,1], b=[1])
+        is a differentiation.
     """
 
     def __init__(self, input_variable, output_variable, a, b):
@@ -152,14 +156,16 @@ class ODE(Block):
         n = len(self.a)
         A = np.zeros(n)
         for i, ai in enumerate(self.a):
-            Ae = [self.a[i] * (-1)**j * np.factorial(i) / np.factorial(j) / np.factorial(i-j) / ((delta_t)**i) for j in range(i + 1)]  # Elementary A to assemblate in A
+            Ae = [self.a[i] * (-1)**j * factorial(i) / factorial(j) / factorial(
+                i-j) / ((delta_t)**i) for j in range(i + 1)]  # Elementary A to assemblate in A
             for j, aej in enumerate(Ae):
                 A[j] += aej
 
         n = len(self.b)
         B = np.zeros(n)
         for i, ai in enumerate(self.b):
-            Be = [self.b[i] * (-1)**j * np.factorial(i) / np.factorial(j) / np.factorial(i-j) / ((delta_t)**i) for j in range(i + 1)]  # Elementary B to assemblate in B
+            Be = [self.b[i] * (-1)**j * factorial(i) / factorial(j) / factorial(
+                i-j) / ((delta_t)**i) for j in range(i + 1)]  # Elementary B to assemblate in B
             for j, bej in enumerate(Be):
                 B[j] += bej
 
@@ -196,11 +202,10 @@ class ODE(Block):
 
 class FunctionBlock(Block):
     """
-        output=f(input)    
+        output = f(input)    
     """
 
     def __init__(self, input_variable, output_variable, function):
-
         Block.__init__(self, [input_variable], [output_variable], 1, 0)
         self.function = function
 
