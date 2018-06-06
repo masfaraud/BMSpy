@@ -3,105 +3,111 @@
 
 """
 
-from bms import PhysicalNode,PhysicalBlock,Variable,np
-from bms.blocks.continuous import Sum,Gain,Subtraction,ODE,WeightedSum,Product
+from bms import PhysicalNode, PhysicalBlock, Variable, np
+from bms.blocks.continuous import Sum, Gain, Subtraction, ODE, WeightedSum, Product
 from bms.blocks.nonlinear import Saturation
 from bms.signals.functions import Step
 
+
 class ElectricalNode(PhysicalNode):
-    def __init__(self,name=''):
-        PhysicalNode.__init__(self,False,True,name,'Voltage','Intensity')
-        
-    def ConservativeLaw(self,flux_variables,output_variable):
-        return [WeightedSum(flux_variables,output_variable,[-1]*len(flux_variables))]
-        
+    def __init__(self, name=''):
+        PhysicalNode.__init__(self, False, True, name, 'Voltage', 'Intensity')
+
+    def ConservativeLaw(self, flux_variables, output_variable):
+        return [WeightedSum(flux_variables, output_variable, [-1]*len(flux_variables))]
+
+
 class Ground(PhysicalBlock):
-    def __init__(self,node1,name='Ground'):
-        occurence_matrix=np.array([[1,0]])# U1=0
-        PhysicalBlock.__init__(self,[node1],[],occurence_matrix,[],name)
-        
-    def PartialDynamicSystem(self,ieq,variable):
+    def __init__(self, node1, name='Ground'):
+        occurence_matrix = np.array([[1, 0]])  # U1=0
+        PhysicalBlock.__init__(self, [node1], [], occurence_matrix, [], name)
+
+    def PartialDynamicSystem(self, ieq, variable):
         """
         returns dynamical system blocks associated to output variable
         """
-        if ieq==0:
+        if ieq == 0:
             # U1=0
-            if variable==self.physical_nodes[0].variable:
-                v=Step('Ground',0)
-                return[Gain(v,variable,1)]                
+            if variable == self.physical_nodes[0].variable:
+                v = Step('Ground', 0)
+                return[Gain(v, variable, 1)]
 
-        
+
 class Resistor(PhysicalBlock):
-    def __init__(self,node1,node2,R,name='Resistor'):
-        occurence_matrix=np.array([[1,1,1,0],[0,1,0,1]])#1st eq: (U1-U2)=R(i1-i2) 2nd: i1=-i2
-        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
-        self.R=R
-        
-    def PartialDynamicSystem(self,ieq,variable):
+    def __init__(self, node1, node2, R, name='Resistor'):
+        # 1st eq: (U1-U2)=R(i1-i2) 2nd: i1=-i2
+        occurence_matrix = np.array([[1, 1, 1, 0], [0, 1, 0, 1]])
+        PhysicalBlock.__init__(self, [node1, node2], [
+                               0, 1], occurence_matrix, [], name)
+        self.R = R
+
+    def PartialDynamicSystem(self, ieq, variable):
         """
         returns dynamical system blocks associated to output variable
         """
 #        print(ieq,variable.name)
-        if ieq==0:
+        if ieq == 0:
             # U1-U2=R(i1)
-            if variable==self.physical_nodes[0].variable:
+            if variable == self.physical_nodes[0].variable:
                 # U1 is output
                 # U1=R(i1)+U2
-                return [WeightedSum([self.physical_nodes[1].variable,self.variables[0]],variable,[1,self.R])]
-            elif variable==self.physical_nodes[1].variable:
+                return [WeightedSum([self.physical_nodes[1].variable, self.variables[0]], variable, [1, self.R])]
+            elif variable == self.physical_nodes[1].variable:
                 # U2 is output
                 # U2=-R(i1)+U2
-                return [WeightedSum([self.physical_nodes[0].variable,self.variables[0]],variable,[1,-self.R])]
-            elif variable==self.variables[0]:
+                return [WeightedSum([self.physical_nodes[0].variable, self.variables[0]], variable, [1, -self.R])]
+            elif variable == self.variables[0]:
                 # i1 is output
                 # i1=(U1-U2)/R
-                return [WeightedSum([self.physical_nodes[0].variable,self.physical_nodes[1].variable],variable,[1/self.R,-1/self.R])]
-        elif ieq==1:
+                return [WeightedSum([self.physical_nodes[0].variable, self.physical_nodes[1].variable], variable, [1/self.R, -1/self.R])]
+        elif ieq == 1:
             # i1=-i2
-            if variable==self.variables[0]:
-                #i1 as output
-                return [Gain(self.variables[1],self.variables[0],-1)]
-            elif variable==self.variables[1]:
-                #i2 as output
-                return [Gain(self.variables[0],self.variables[1],-1)]
-                    
-      
+            if variable == self.variables[0]:
+                # i1 as output
+                return [Gain(self.variables[1], self.variables[0], -1)]
+            elif variable == self.variables[1]:
+                # i2 as output
+                return [Gain(self.variables[0], self.variables[1], -1)]
+
+
 class Generator(PhysicalBlock):
     """
     :param voltage_signal: BMS signal to be input function of voltage (Step,Sinus...)
     """
-    def __init__(self,node1,node2,voltage_signal,name='GeneratorGround'):
-        occurence_matrix=np.array([[1,0,1,0]]) # 1st eq: U2=signal, U1=0 
-        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
-        self.voltage_signal=voltage_signal
 
-    def PartialDynamicSystem(self,ieq,variable):
+    def __init__(self, node1, node2, voltage_signal, name='GeneratorGround'):
+        occurence_matrix = np.array([[1, 0, 1, 0]])  # 1st eq: U2=signal, U1=0
+        PhysicalBlock.__init__(self, [node1, node2], [
+                               0, 1], occurence_matrix, [], name)
+        self.voltage_signal = voltage_signal
+
+    def PartialDynamicSystem(self, ieq, variable):
         """
         returns dynamical system blocks associated to output variable
         """
-        if ieq==0:
+        if ieq == 0:
             # U2-U1=signal
-            if variable==self.physical_nodes[0].variable:
+            if variable == self.physical_nodes[0].variable:
                 # U1 is output
                 # U1=U2-signal
-                return [WeightedSum([self.physical_nodes[1].variable,self.voltage_signal],variable,[1,-1])]
-            elif variable==self.physical_nodes[1].variable:
+                return [WeightedSum([self.physical_nodes[1].variable, self.voltage_signal], variable, [1, -1])]
+            elif variable == self.physical_nodes[1].variable:
                 # U2 is output
                 # U2=U1+signal
-                return [WeightedSum([self.physical_nodes[0].variable,self.voltage_signal],variable,[1,1])]
+                return [WeightedSum([self.physical_nodes[0].variable, self.voltage_signal], variable, [1, 1])]
 
-                
-#class Battery(PhysicalBlock):
+
+# class Battery(PhysicalBlock):
 #    """
 #    Caution: still a bug, soc=0 doesn't imply i=0
 #    : param Umax: Voltage when soc=1
 #    : param Umin: Voltage when soc=0
-#    : param C: capacity of battery in W.s 
-#        
+#    : param C: capacity of battery in W.s
+#
 #    """
 #    def __init__(self,node1,node2,Umin,Umax,C,initial_soc,R,name='Battery'):
-##        occurence_matrix=np.array([[1,1,1,0],[0,1,0,1]]) # 1st eq: U2=signal, U1=0 
-#        occurence_matrix=np.array([[1,1,1,0]]) # 1st eq: U2=signal, U1=0 
+# occurence_matrix=np.array([[1,1,1,0],[0,1,0,1]]) # 1st eq: U2=signal, U1=0
+#        occurence_matrix=np.array([[1,1,1,0]]) # 1st eq: U2=signal, U1=0
 #        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
 #        self.Umax=Umax
 #        self.Umin=Umin
@@ -110,7 +116,7 @@ class Generator(PhysicalBlock):
 #        self.initial_soc=initial_soc
 #        self.soc=Variable('Battery SoC',[initial_soc])
 #        self.U=Variable('Battery voltage')
-#        
+#
 #    def PartialDynamicSystem(self,ieq,variable):
 #        """
 #        returns dynamical system blocks associated to output variable
@@ -145,41 +151,41 @@ class Generator(PhysicalBlock):
 #                # i1 is output
 #                # i1=(-U1+U2-U)/R
 #                blocks.append(WeightedSum([self.physical_nodes[0].variable,self.physical_nodes[1].variable,self.U],variable,[-1/self.R,1/self.R,-1/self.R]))
-#                
+#
 #            return blocks
-            
-            
+
 
 class Capacitor(PhysicalBlock):
-    def __init__(self,node1,node2,C,name='Capacitor'):
-        occurence_matrix=np.array([[1,0,1,0],[0,1,0,1]])#1st eq: (U1-U2)=R(i1-i2) 2nd: i1=-i2
-        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
-        self.C=C
-        
-        
-    def PartialDynamicSystem(self,ieq,variable):
+    def __init__(self, node1, node2, C, name='Capacitor'):
+        # 1st eq: (U1-U2)=R(i1-i2) 2nd: i1=-i2
+        occurence_matrix = np.array([[1, 0, 1, 0], [0, 1, 0, 1]])
+        PhysicalBlock.__init__(self, [node1, node2], [
+                               0, 1], occurence_matrix, [], name)
+        self.C = C
+
+    def PartialDynamicSystem(self, ieq, variable):
         """
         returns dynamical system blocks associated to output variable
         """
 
-        if ieq==0:
-            
-            if variable==self.physical_nodes[0].variable:
+        if ieq == 0:
+
+            if variable == self.physical_nodes[0].variable:
                 print('1')
                 # U1 is output
                 # U1=i1/pC+U2
-                Uc=Variable(hidden=True)
-                block1=ODE(self.variables[0],Uc,[1],[0,self.C])
-                sub1=Sum([self.physical_nodes[1].variable,Uc],variable)
-                return [block1,sub1]
-            elif variable==self.physical_nodes[1].variable:
+                Uc = Variable(hidden=True)
+                block1 = ODE(self.variables[0], Uc, [1], [0, self.C])
+                sub1 = Sum([self.physical_nodes[1].variable, Uc], variable)
+                return [block1, sub1]
+            elif variable == self.physical_nodes[1].variable:
                 print('2')
                 # U2 is output
                 # U2=U1-i1/pC
-                Uc=Variable(hidden=True)
-                block1=ODE(self.variables[0],Uc,[-1],[0,self.C])
-                sum1=Sum([self.physical_nodes[0].variable,Uc],variable)
-                return [block1,sum1]
+                Uc = Variable(hidden=True)
+                block1 = ODE(self.variables[0], Uc, [-1], [0, self.C])
+                sum1 = Sum([self.physical_nodes[0].variable, Uc], variable)
+                return [block1, sum1]
 #            elif variable==self.variables[0]:
 #                print('3')
 #                # i1 is output
@@ -188,63 +194,63 @@ class Capacitor(PhysicalBlock):
 #                subs1=Subtraction(self.physical_nodes[0].variable,self.physical_nodes[1].variable,ic)
 #                block1=ODE(ic,variable,[0,self.C],[1])
 #                return [block1,subs1]
-        elif ieq==1:
+        elif ieq == 1:
             # i1=-i2
-            if variable==self.variables[0]:
-                #i1 as output
-#                print('Bat1#0')
-                return [Gain(self.variables[1],self.variables[0],-1)]
-            elif variable==self.variables[1]:
-                #i2 as output
-#                print('Bat1#1')
-                return [Gain(self.variables[0],self.variables[1],-1)]
-
+            if variable == self.variables[0]:
+                # i1 as output
+                #                print('Bat1#0')
+                return [Gain(self.variables[1], self.variables[0], -1)]
+            elif variable == self.variables[1]:
+                # i2 as output
+                #                print('Bat1#1')
+                return [Gain(self.variables[0], self.variables[1], -1)]
 
 
 class Inductor(PhysicalBlock):
-    def __init__(self,node1,node2,L,name='Inductor'):
-        occurence_matrix=np.array([[1,1,1,0],[0,1,0,1]])#1st eq: (U1-U2)=Ldi1/dt 2nd: i1=-i2
-        PhysicalBlock.__init__(self,[node1,node2],[0,1],occurence_matrix,[],name)
-        self.L=L
-        
-    def PartialDynamicSystem(self,ieq,variable):
+    def __init__(self, node1, node2, L, name='Inductor'):
+        # 1st eq: (U1-U2)=Ldi1/dt 2nd: i1=-i2
+        occurence_matrix = np.array([[1, 1, 1, 0], [0, 1, 0, 1]])
+        PhysicalBlock.__init__(self, [node1, node2], [
+                               0, 1], occurence_matrix, [], name)
+        self.L = L
+
+    def PartialDynamicSystem(self, ieq, variable):
         """
         returns dynamical system blocks associated to output variable
         """
 
-        if ieq==0:
-            
-#            if variable==self.physical_nodes[0].variable:
-##                print('1')
-#                # U1 is output
-#                # U1=i1/pC+U2
-#                Uc=Variable(hidden=True)
-#                block1=ODE(self.variables[0],Uc,[1],[0,self.C])
-#                sub1=Sum([self.physical_nodes[1].variable,Uc],variable)
-#                return [block1,sub1]
-#            elif variable==self.physical_nodes[1].variable:
-#                print('2')
-#                # U2 is output
-#                # U2=U1-i1/pC
-#                Uc=Variable(hidden=True)
-#                block1=ODE(self.variables[0],Uc,[-1],[0,self.C])
-#                sum1=Sum([self.physical_nodes[0].variable,Uc],variable)
-#                return [block1,sum1]
-            if variable==self.variables[0]: # i1=(u1-u2)/Lp
+        if ieq == 0:
+
+            #            if variable==self.physical_nodes[0].variable:
+            # print('1')
+            #                # U1 is output
+            #                # U1=i1/pC+U2
+            #                Uc=Variable(hidden=True)
+            #                block1=ODE(self.variables[0],Uc,[1],[0,self.C])
+            #                sub1=Sum([self.physical_nodes[1].variable,Uc],variable)
+            #                return [block1,sub1]
+            #            elif variable==self.physical_nodes[1].variable:
+            #                print('2')
+            #                # U2 is output
+            #                # U2=U1-i1/pC
+            #                Uc=Variable(hidden=True)
+            #                block1=ODE(self.variables[0],Uc,[-1],[0,self.C])
+            #                sum1=Sum([self.physical_nodes[0].variable,Uc],variable)
+            #                return [block1,sum1]
+            if variable == self.variables[0]:  # i1=(u1-u2)/Lp
                 print('3')
                 # i1 is output
                 # i1=pC(U1-U2)
-                Uc=Variable(hidden=True)
-                subs1=Subtraction(self.physical_nodes[0].variable,self.physical_nodes[1].variable,Uc)
-                block1=ODE(Uc,variable,[1],[0,self.L])
-                return [block1,subs1]
-        elif ieq==1:
+                Uc = Variable(hidden=True)
+                subs1 = Subtraction(
+                    self.physical_nodes[0].variable, self.physical_nodes[1].variable, Uc)
+                block1 = ODE(Uc, variable, [1], [0, self.L])
+                return [block1, subs1]
+        elif ieq == 1:
             # i1=-i2
-            if variable==self.variables[0]:
-                #i1 as output
-                return [Gain(self.variables[1],self.variables[0],-1)]
-            elif variable==self.variables[1]:
-                #i2 as output
-                return [Gain(self.variables[0],self.variables[1],-1)]
-
-            
+            if variable == self.variables[0]:
+                # i1 as output
+                return [Gain(self.variables[1], self.variables[0], -1)]
+            elif variable == self.variables[1]:
+                # i2 as output
+                return [Gain(self.variables[0], self.variables[1], -1)]
