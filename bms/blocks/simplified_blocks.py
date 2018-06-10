@@ -4,7 +4,6 @@
 """
 
 from bms.blocks.continuous import ODE
-from bms.signals.functions import Ramp
 
 class IntegrationBlock(ODE):
     """
@@ -25,13 +24,3 @@ class DifferentiationBlock(ODE):
         
     def LabelBlock(self):
         return 'dx/dt'
-    
-class TimeBlock(Ramp):
-    """
-        Creates a Ramp that is equal to the time variable of the simulation.
-    """
-    def __init__(self):
-        Ramp.__init__(self, name='time', amplitude=1)
-    
-    def LabelBlock(self):
-        return 't'
