@@ -206,11 +206,20 @@ class FunctionBlock(Block):
     """
 
     def __init__(self, input_variable, output_variable, function):
-        Block.__init__(self, [input_variable], [output_variable], 1, 0)
+        self.list_as_input = isinstance(input_variable, list)
+        
+        if self.list_as_input:
+            Block.__init__(self, input_variable, [output_variable], 1, 0)
+        else:
+            Block.__init__(self, [input_variable], [output_variable], 1, 0)
+        
         self.function = function
 
     def Evaluate(self, it, ts):
-        return np.array([self.function(self.InputValues(it)[0])])
+        if self.list_as_input:
+            return np.array([self.function(*self.InputValues(it))])
+        else:
+            return np.array([self.function(self.InputValues(it)[0])])
 
     def LabelBlock(self):
         return 'f(t)'
