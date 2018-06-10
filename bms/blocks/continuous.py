@@ -11,7 +11,12 @@ from scipy.special import factorial
 
 class Gain(Block):
     """
-        output = value * input + offset   
+        output = value * input + offset
+        
+        :param Variable input_variable: This is the input of the block.
+        :param Variable output_variable: This is the output of the block.
+        :param gain: This is what multiplies the input.
+        :param offset: This is added to the input after being multiplied.
     """
 
     def __init__(self, input_variable, output_variable, value, offset=0):
@@ -31,7 +36,10 @@ class Gain(Block):
 
 class Sum(Block):
     """
-        output = \sum inputs    
+        output = \sum inputs
+        
+        :param list[Variables] input_variable: This is the list of inputs of the block.
+        :param Variable output_variable: This is the output of the block.
     """
 
     def __init__(self, inputs, output_variable):
@@ -50,7 +58,12 @@ class Sum(Block):
 class WeightedSum(Block):
     """
         Defines a weighted sum over inputs
-        output = \sum w_i * input_i    
+        output = \sum w_i * input_i
+        
+        :param list[Variables] input_variable: This is the list of inputs of the block.
+        :param Variable output_variable: This is the output of the block.
+        :param weights: These are the weights that are multiplied by the elements of the input.
+        :param offset: This offset is added to the final result.
     """
 
     def __init__(self, inputs, output_variable, weights, offset=0):
@@ -72,7 +85,11 @@ class WeightedSum(Block):
 
 class Subtraction(Block):
     """
-        output = input1 - input2    
+        output = input1 - input2
+        
+        :param Variable input_variable1: This is the first input of the block, the minuend.
+        :param Variable input_variable2: This is the second input of the block, the subtrahend.
+        :param Variable output_variable: This is the output of the block, the difference.
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -91,7 +108,11 @@ class Subtraction(Block):
 
 class Product(Block):
     """
-        output = input1 * input2    
+        output = input1 * input2
+        
+        :param Variable input_variable1: This is the first input of the block, one factor.
+        :param Variable input_variable2: This is the second input of the block, another factor.
+        :param Variable output_variable: This is the output of the block, the product.
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -112,7 +133,11 @@ class Product(Block):
 
 class Division(Block):
     """
-        output = input1 / input2    
+        output = input1 / input2
+        
+        :param Variable input_variable1: This is the first input of the block, the dividend.
+        :param Variable input_variable2: This is the second input of the block, the divisor.
+        :param Variable output_variable: This is the output of the block, the quotient.
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -141,6 +166,11 @@ class ODE(Block):
 
         For example, (a=[1], b=[0,1]) is an integration, and (a=[0,1], b=[1])
         is a differentiation.
+        
+        :param Variable input_variable: This is the input of the block.
+        :param Variable output_variable: This is the output of the block.
+        :param a: This is the a vector for the transfer function.
+        :param b: This is the b vector for the transfer function.
     """
 
     def __init__(self, input_variable, output_variable, a, b):
@@ -202,7 +232,11 @@ class ODE(Block):
 
 class FunctionBlock(Block):
     """
-        output = f(input)    
+        output = f(input)
+        
+        :param input_variable: This is the input or list of inputs of the block.
+        :param Variable output_variable: This is the output of the block.
+        :param function: This is the function that takes the inputs and returns the output.
     """
 
     def __init__(self, input_variable, output_variable, function):
