@@ -6,8 +6,14 @@
 from bms.blocks.continuous import ODE
 
 class IntegrationBlock(ODE):
-    """
-        Creates an ODE block that performs integration over time.
+    """Creates an ODE block that performs integration of the input over time.
+
+    .. math:: output = \int_{0}^{t} input\ dt
+
+    Args:
+        input_variable: This is the input or list of inputs of the block.
+        output_variable (Variable): This is the output of the block.
+
     """
     def __init__(self, input_variable, output_variable):
         ODE.__init__(self, input_variable, output_variable, a=[1], b=[0, 1])
@@ -16,8 +22,14 @@ class IntegrationBlock(ODE):
         return 'Integral'
     
 class DifferentiationBlock(ODE):
-    """
-        Creates an ODE block that performs differentation relative to time.
+    """Creates an ODE block that performs differentation of the input relative to time.
+    
+    .. math:: output = \\frac{d[input]}{dt}
+
+    Args:
+        input_variable: This is the input or list of inputs of the block.
+        output_variable (Variable): This is the output of the block.
+
     """
     def __init__(self, input_variable, output_variable):
         ODE.__init__(self, input_variable, output_variable, a=[0, 1], b=[1])

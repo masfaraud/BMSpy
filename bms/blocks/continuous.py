@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Collection of continuous blocks
+"""Collection of continuous blocks
 
 """
 
@@ -10,13 +9,16 @@ from scipy.special import factorial
 
 
 class Gain(Block):
-    """
-        output = value * input + offset
-        
-        :param Variable input_variable: This is the input of the block.
-        :param Variable output_variable: This is the output of the block.
-        :param gain: This is what multiplies the input.
-        :param offset: This is added to the input after being multiplied.
+    """Defines a gain operation.
+
+    .. math:: output = (value \\times input) + offset
+
+    Args:
+        input_variable (Variable): This is the input of the block.
+        output_variable (Variable): This is the output of the block.
+        gain: This is what multiplies the input.
+        offset: This is added to the input after being multiplied.
+
     """
 
     def __init__(self, input_variable, output_variable, value, offset=0):
@@ -35,11 +37,14 @@ class Gain(Block):
 
 
 class Sum(Block):
-    """
-        output = \sum inputs
-        
-        :param list[Variables] input_variable: This is the list of inputs of the block.
-        :param Variable output_variable: This is the output of the block.
+    """Defines a sum over its inputs.
+
+    .. math:: output = \sum{input_i}
+       
+    Args: 
+        input_variable (list[Variables]): This is the list of inputs of the block.
+        output_variable (Variable): This is the output of the block.
+
     """
 
     def __init__(self, inputs, output_variable):
@@ -56,14 +61,16 @@ class Sum(Block):
 
 
 class WeightedSum(Block):
-    """
-        Defines a weighted sum over inputs
-        output = \sum w_i * input_i
-        
-        :param list[Variables] input_variable: This is the list of inputs of the block.
-        :param Variable output_variable: This is the output of the block.
-        :param weights: These are the weights that are multiplied by the elements of the input.
-        :param offset: This offset is added to the final result.
+    """Defines a weighted sum over its inputs.
+
+    .. math:: output = \sum{w_i \\times input_i}
+
+    Args:        
+        input_variable (list[Variables]): This is the list of inputs of the block.
+        output_variable (Variable): This is the output of the block.
+        weights: These are the weights that are multiplied by the elements of the input.
+        offset: This offset is added to the final result.
+
     """
 
     def __init__(self, inputs, output_variable, weights, offset=0):
@@ -84,12 +91,15 @@ class WeightedSum(Block):
 
 
 class Subtraction(Block):
-    """
-        output = input1 - input2
+    """Defines a subtraction between its two inputs.
+
+    .. math:: output = input_1 - input_2
         
-        :param Variable input_variable1: This is the first input of the block, the minuend.
-        :param Variable input_variable2: This is the second input of the block, the subtrahend.
-        :param Variable output_variable: This is the output of the block, the difference.
+    Args:
+        input_variable1 (Variable): This is the first input of the block, the minuend.
+        input_variable2 (Variable): This is the second input of the block, the subtrahend.
+        output_variable (Variable): This is the output of the block, the difference.
+
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -107,12 +117,15 @@ class Subtraction(Block):
 
 
 class Product(Block):
-    """
-        output = input1 * input2
+    """Defines a multiplication between its inputs.
+
+    .. math:: output = input_1 \\times input_2
         
-        :param Variable input_variable1: This is the first input of the block, one factor.
-        :param Variable input_variable2: This is the second input of the block, another factor.
-        :param Variable output_variable: This is the output of the block, the product.
+    Args:
+        input_variable1 (Variable): This is the first input of the block, one factor.
+        input_variable2 (Variable): This is the second input of the block, another factor.
+        output_variable (Variable): This is the output of the block, the product.
+
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -132,12 +145,15 @@ class Product(Block):
 
 
 class Division(Block):
-    """
-        output = input1 / input2
-        
-        :param Variable input_variable1: This is the first input of the block, the dividend.
-        :param Variable input_variable2: This is the second input of the block, the divisor.
-        :param Variable output_variable: This is the output of the block, the quotient.
+    """Defines a division between its inputs.
+
+    .. math:: output = \\frac{input1}{input2}
+    
+    Args:    
+        input_variable1 (Variable): This is the first input of the block, the dividend.
+        input_variable2 (Variable): This is the second input of the block, the divisor.
+        output_variable (Variable): This is the output of the block, the quotient.
+
     """
 
     def __init__(self, input_variable1, input_variable2, output_variable):
@@ -148,7 +164,7 @@ class Division(Block):
     def Evaluate(self, it, ts):
 
         value1, value2 = self.InputValues(it)
-        return value1/value2
+        return value1 / value2
 
     def LabelBlock(self):
         return '/'
@@ -158,19 +174,24 @@ class Division(Block):
 
 
 class ODE(Block):
-    """
-        a,b are vectors of coefficients such as H, the transfer function of
-        the block, may be written as:
-        H(p)=(a[i]p**i)/(b[j]p**j) (Einstein sum on i,j)
-        p is Laplace's variable
+    """Defines an ordinary differential equation based on the input.
 
-        For example, (a=[1], b=[0,1]) is an integration, and (a=[0,1], b=[1])
-        is a differentiation.
+    a, b are vectors of coefficients so that H, the transfer function of
+    the block, can be written as:
+
+    .. math:: H(p) = \\frac{a_i p^i}{b_j p^j}
+
+    with Einstein sum on i and j, and p is Laplace's variable.
+
+    For example, :code:`a=[1], b=[0,1]` is an integration, 
+    and :code:`a=[0,1], b=[1]` is a differentiation.
         
-        :param Variable input_variable: This is the input of the block.
-        :param Variable output_variable: This is the output of the block.
-        :param a: This is the a vector for the transfer function.
-        :param b: This is the b vector for the transfer function.
+    Args:
+        input_variable (Variable): This is the input of the block.
+        output_variable (Variable): This is the output of the block.
+        a: This is the a vector for the transfer function.
+        b: This is the b vector for the transfer function.
+
     """
 
     def __init__(self, input_variable, output_variable, a, b):
@@ -221,32 +242,35 @@ class ODE(Block):
 #        print(Mi,self.InputValues(it),Mo,self.OutputValues(it))
 #            print(np.dot(Mi,self.InputValues(it).T))
 #            print(np.dot(Mo,self.OutputValues(it).T))
-        return np.dot(Mi, self.InputValues(it).T)+np.dot(Mo, self.OutputValues(it).T)
+        return np.dot(Mi, self.InputValues(it).T) + np.dot(Mo, self.OutputValues(it).T)
 
     def LabelBlock(self):
-        return str(self.a)+'\n'+str(self.b)
+        return str(self.a) + '\n' + str(self.b)
 
     def LabelConnections(self):
         return ['', '']
 
 
 class FunctionBlock(Block):
-    """
-        output = f(input)
+    """This defines a custom function over the input(s).
+
+    .. math:: output = f(input)
         
-        :param input_variable: This is the input or list of inputs of the block.
-        :param Variable output_variable: This is the output of the block.
-        :param function: This is the function that takes the inputs and returns the output.
+    Args:
+        input_variable: This is the input or list of inputs of the block.
+        output_variable (Variable): This is the output of the block.
+        function: This is the function that takes the inputs and returns the output.
+
     """
 
     def __init__(self, input_variable, output_variable, function):
         self.list_as_input = isinstance(input_variable, list)
-        
+
         if self.list_as_input:
             Block.__init__(self, input_variable, [output_variable], 1, 0)
         else:
             Block.__init__(self, [input_variable], [output_variable], 1, 0)
-        
+
         self.function = function
 
     def Evaluate(self, it, ts):

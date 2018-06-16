@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-Collection of non-linear blocks
+"""Collection of non-linear blocks
 
 """
 
@@ -61,10 +60,23 @@ import numpy as np
 
 
 class Saturation(Block):
-    """
-        output=min_value if input < min_value
-        output=max_value if input > max_value
-        output=input if  min_value < input < max_value        
+    """Defines a saturation block.
+
+    .. math::
+        output = 
+        \\begin{cases}
+            min\_value, & \\textrm{if } input < min\_value
+
+            max\_value, & \\textrm{if } input > max\_value
+
+            input, & \\textrm{if } min\_value \leq input \leq max\_value
+        \\end{cases}
+
+    Args:
+        input_variable (Variable): This is the input of the block.
+        output_variable (Variable): This is the output of the block.
+        min_value: This is the lower bound for the output.
+        max_value: This is the upper bound for the output.
     """
 
     def __init__(self, input_variable, output_variable, min_value, max_value):
@@ -190,11 +202,18 @@ class RegCoulombVariableValue(Block):
 
 
 class Sign(Block):
-    """
-        Return the sign of a variable
-        :returns: * -1 if input < 0
-                  *  1 if input > 0
+    """Defines a sign operation on the input.
 
+    .. math::
+        output = 
+        \\begin{cases}
+        -1, & \\textrm{if } input < 0
+
+        0, & \\textrm{if } input = 0
+
+        1, & \\textrm{if } input > 0
+        \\end{cases}
+        
     """
 
     def __init__(self, input_variable, output_variable):

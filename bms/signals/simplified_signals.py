@@ -6,8 +6,13 @@
 from bms.signals.functions import Ramp
 
 class Time(Ramp):
-    """
-        Creates a Ramp that is equal to the time variable of the simulation.
+    """Creates a Ramp that is equal to the time variable of the simulation.
+
+    .. math:: f(t) = t
+
+    Args:
+        name (str): The name of this signal.
+        
     """
     def __init__(self):
         Ramp.__init__(self, name='time', amplitude=1)

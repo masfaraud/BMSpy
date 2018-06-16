@@ -20,8 +20,10 @@ class Variable:
     """ Defines a variable
 
     :param names: Defines full name and short name.
-    If names is a string the two names will be identical
+
+    If names is a string the two names will be identical 
     otherwise names should be a tuple of strings (full_name,short_name) 
+    
     :param hidden: inner variable to hide in plots if true
     """
 
