@@ -24,5 +24,5 @@ setup(name='bms',
       license = 'Creative Commons Attribution-Share Alike license',
       packages = ['bms', 'bms.blocks', 'bms.signals', 'bms.physical'],
       package_dir = {'bms': 'bms'},
-      install_requires = ['numpy', 'matplotlib>=2.0', 'networkx', 'dill'],
+      install_requires = ['numpy', 'matplotlib>=2.0', 'networkx>=2.0', 'dill'],
       classifiers = ['Topic :: Scientific/Engineering', 'Development Status :: 3 - Alpha'])
