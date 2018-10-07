@@ -39,6 +39,7 @@ class Ramp(Signal):
                 return (t-delay) * amplitude + offset
         self.function = function
 
+unit_ramp = Ramp(amplitude = 1, name='Unit ramp')
 
 class Sinus(Signal):
     def __init__(self, name='Sinus', amplitude=1, w=1, phase=0, offset=0):
