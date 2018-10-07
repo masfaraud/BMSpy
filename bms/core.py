@@ -521,7 +521,7 @@ class DynamicSystem:
             axs[isub].grid()
 
         plt.xlabel('Time')
-        fig.show()
+        plt.show()
 
     def DrawModel(self):
         from .interface import ModelDrawer
