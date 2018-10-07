@@ -66,6 +66,7 @@ class Ramp(Signal):
                 return (t-delay) * amplitude + offset
         self.function = function
 
+unit_ramp = Ramp(amplitude = 1, name='Unit ramp')
 
 class Sinus(Signal):
     """Create a Sine wave with a certain amplitude, angular velocity, phase and offset.
