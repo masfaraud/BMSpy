@@ -259,13 +259,14 @@ class IntegrationBlock(ODE):
     Args:
         input_variable: This is the input or list of inputs of the block.
         output_variable (Variable): This is the output of the block.
-    
+
     """
     def __init__(self, input_variable, output_variable):
         ODE.__init__(self, input_variable, output_variable, a=[1], b=[0, 1])
         
     def LabelBlock(self):
         return 'Integral'
+
     
 class DifferentiationBlock(ODE):
     """Creates an ODE block that performs differentation of the input relative to time.
