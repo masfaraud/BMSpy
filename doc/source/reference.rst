@@ -39,17 +39,6 @@ WLTP signals
   :inherited-members:
   :show-inheritance:
 
-Simplified Signals
-^^^^^^^^^^^^^^^^^^
-
-.. automodule:: bms.signals.simplified_signals
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-.. _blocks-reference:
-
 Blocks
 ------
 
@@ -72,15 +61,6 @@ Non-linear Blocks
 ^^^^^^^^^^^^^^^^^
 
 .. automodule:: bms.blocks.nonlinear
-  :members:
-  :undoc-members:
-  :inherited-members:
-  :show-inheritance:
-
-Simplified Blocks
-^^^^^^^^^^^^^^^^^
-
-.. automodule:: bms.blocks.simplified_blocks
   :members:
   :undoc-members:
   :inherited-members:
