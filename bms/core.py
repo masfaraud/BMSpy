@@ -70,6 +70,8 @@ class Signal(Variable):
                 self.name = names[0]
             except:
                 raise TypeError
+                
+
 
         self._values = np.array([])
         self.max_order = 0
@@ -81,6 +83,8 @@ class Signal(Variable):
         for i in range(ns+1):
             self._values[i+max_order] = self.function(i*ts)
         self._ForwardValues()
+        self.initial_values = [self._values[0]]
+
 
     def _ForwardValues(self):
         """
@@ -487,6 +491,7 @@ class DynamicSystem:
         :param variables: one variable or a list of variables
         :param t: time of evaluation
         """
+        # TODO: put interpolation in variables
         if (t < self.te) | (t > 0):
             i = t//self.ts  # time step
             ti = self.ts*i
@@ -739,18 +744,13 @@ class PhysicalSystem:
                 variables = []
                 for block in self.physical_blocks:
                     try:
-                        #                        print(block)
                         ibn = block.physical_nodes.index(block_node)
-#                        print(ibn)
                         if ibn in block.nodes_with_fluxes:
                             variable2 = block.variables[ibn]
                             if variable2 != variable:
                                 variables.append(variable2)
                     except ValueError:
                         pass
-#                print('v: ',variables,variable)
-#                v1=Variable()
-#                print('lv',len(variables))
 
 #                model_blocks.append(WeightedSum(variables,variable,[-1]*len(variables)))
                 model_blocks.extend(
@@ -758,7 +758,6 @@ class PhysicalSystem:
 
                 #                model_blocks.append(Gain(v1,variable,-1))
 
-#        print(model_blocks)
         model_blocks.extend(self.command_blocks)
         return DynamicSystem(self.te, self.ns, model_blocks)
 

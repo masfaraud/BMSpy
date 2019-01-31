@@ -49,23 +49,28 @@ import numpy as np
 class Delay(Block):
     """
     Simple block to delay output with respect to input.
-    What should it do with delay < 0? Raise or allow?
+    
+    :param delay: a delay in seconds
     """
     def __init__(self, input_variable, output_variable, delay):
         Block.__init__(self, [input_variable], [output_variable], 1, 0)
         self.delay = delay
+        if delay < 0:
+            raise ValueError
 
     def Evaluate(self, it, ts):
-        # TODO this is not performant. Why do we have to evaluate one at a time if we know upfront exactly what
-        # all the outputs should be? I could just do something like:
-        # self.outputs[0]._values = np.roll(self.inputs[0]._values, 3)
 
-        delay_in_steps = int(self.delay / ts)
-        if it < delay_in_steps:
-            return np.nan
+        delay_in_steps = int(self.delay // ts)
+        delay_remainder = self.delay % ts
+        if it - delay_in_steps-1 < 0:
+            print(it, 'a', self.inputs[0].initial_values[-1])
+            return self.inputs[0].initial_values[-1]
         else:
-            return self.inputs[0]._values[it - delay_in_steps]
-
+            # Performing interpolation
+            v1 = self.inputs[0]._values[it - delay_in_steps-1]
+            v2 = self.inputs[0]._values[it - delay_in_steps]
+            return (ts-delay_remainder)/ts*(v2-v1) +v1 
+            
     def Label(self):
         return 'delay'
 
