@@ -62,8 +62,8 @@ class Delay(Block):
 
         delay_in_steps = int(self.delay // ts)
         delay_remainder = self.delay % ts
-        if it - delay_in_steps-1 < 0:
-            print(it, 'a', self.inputs[0].initial_values[-1])
+        if (it - delay_in_steps -1) < 0:
+#            print(it, 'a', self.inputs[0].initial_values[-1])
             return self.inputs[0].initial_values[-1]
         else:
             # Performing interpolation

@@ -1,7 +1,7 @@
 from bms.blocks import Delay
 from bms.core import DynamicSystem
 from bms.signals.functions import Ramp
-from bms.core import Signal, Variable
+from bms.core import Variable
 
 
 """ test that we can delay a signal by 2 seconds
@@ -10,7 +10,7 @@ There is a bug somewhere and first sample is set to 0 (i'm not testing first sam
 """
 delay = 2.3   # time
 end_time = 10
-time_step = 20
+time_step = 200
 input_ = Ramp()
 output_ = Variable(('output', 'o'))
 delay = Delay(input_, output_, delay)
