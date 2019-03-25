@@ -165,7 +165,9 @@ class Block:
         return O
 
     def Solve(self, it, ts):
-        self.outputs[0]._values[it] = self.Evaluate(it, ts)
+        step_outputs = self.Evaluate(it, ts)
+        for i, step_output in enumerate(step_outputs):
+            self.outputs[i]._values[it] = step_output
 
 
 class ModelError(Exception):
