@@ -1,0 +1,39 @@
+---
+kind: pipeline
+type: docker
+name: default
+
+steps:
+- name: install, build doc run scripts
+  image: python:3.7
+  commands:
+  - git fetch --tags 
+  - pip install sphinx sphinx_rtd_theme
+  - python setup.py install
+  - cd doc
+  - make html
+  - cd ../scripts
+  - python first_order.py
+  - python second_order.py
+  - python electric_motor.py
+  - python clutch.py
+
+- name: develop
+  image: python:3.7
+  commands:
+  - python setup.py develop
+
+- name: sdist
+  image: python:3.7
+  commands:
+  - python setup.py sdist
+
+- name: upload to pypi
+  image: plugins/pypi
+  when:
+      event: tag
+  settings:
+    skip_build: True
+    username: masfaraud
+    password:
+        from_secret: pypi_password
