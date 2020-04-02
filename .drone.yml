@@ -13,7 +13,7 @@ steps:
   - cd doc
   - make html
   - cd ../scripts
-  - python first_ordery
+  - python first_order.py
   - python second_order.py
   - python electric_motor.py
   - python clutch.py
