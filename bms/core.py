@@ -507,6 +507,7 @@ class DynamicSystem:
 
             else:
                 # interpolation
+                i = int(i)# Fixing bug #31
                 return variables.values[i]*((ti-t)/self.ts+1)+variables.values[i+1]*(t-ti)/self.ts
         else:
             raise ValueError
